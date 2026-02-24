@@ -1,0 +1,65 @@
+"use client"
+
+import { useState } from "react"
+import { supabase } from "@/lib/supabase"
+import { useRouter } from "next/navigation"
+
+export default function Signup() {
+  const [email, setEmail] = useState("")
+  const [password, setPassword] = useState("")
+  const [nickname, setNickname] = useState("")
+  const router = useRouter()
+
+  const handleSignup = async () => {
+    const { error } = await supabase.auth.signUp({
+      email,
+      password,
+      options: {
+        data: {
+          nickname: nickname
+        }
+      }
+    })
+
+    if (error) {
+      alert(error.message)
+    } else {
+      alert("登録成功！")
+      router.push("/login")
+    }
+  }
+
+  return (
+    <div className="min-h-screen flex flex-col items-center justify-center gap-4">
+      <h1 className="text-2xl font-bold">アカウント作成</h1>
+
+      <input
+        type="text"
+        placeholder="ニックネーム"
+        className="border p-2"
+        onChange={(e) => setNickname(e.target.value)}
+      />
+
+      <input
+        type="email"
+        placeholder="メールアドレス"
+        className="border p-2"
+        onChange={(e) => setEmail(e.target.value)}
+      />
+
+      <input
+        type="password"
+        placeholder="パスワード"
+        className="border p-2"
+        onChange={(e) => setPassword(e.target.value)}
+      />
+
+      <button
+        onClick={handleSignup}
+        className="bg-blue-500 text-white px-4 py-2 rounded"
+      >
+        登録
+      </button>
+    </div>
+  )
+}
