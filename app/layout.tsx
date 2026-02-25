@@ -14,8 +14,8 @@ const geistMono = Geist_Mono({
 })
 
 export const metadata: Metadata = {
-  title: "Ilia Portal",
-  description: "YouTube × Minecraft Community Site",
+  title: "Ilia. | MCS公式",
+  description: "Ilia./衣李亜 YouTube公式サイト",
 }
 
 export default function RootLayout({

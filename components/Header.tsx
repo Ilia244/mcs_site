@@ -48,7 +48,7 @@ export default function Header() {
   return (
     <nav className="flex justify-between items-center px-8 py-4 bg-gradient-to-r from-purple-900 to-cyan-900 shadow-lg relative">
       <h1 className="text-xl font-bold text-cyan-400 drop-shadow-[0_0_10px_#00ffff]">
-        Ilia Portal
+        Ilia./衣李亜 | MCS公式
       </h1>
 
       <div className="flex gap-6 items-center">
