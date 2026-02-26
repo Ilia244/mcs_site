@@ -7,8 +7,8 @@ export default function Profile() {
   const [file, setFile] = useState<File | null>(null)
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null)
   const [previewUrl, setPreviewUrl] = useState<string | null>(null)
-  const [nickname, setNickname] = useState<string>("")
-  const [newNickname, setNewNickname] = useState<string>("")
+  const [displayName, setDisplayName] = useState<string>("")
+  const [newDisplayName, setNewDisplayName] = useState<string>("")
   const [isAdmin, setIsAdmin] = useState<boolean>(false)
   const [loading, setLoading] = useState<boolean>(false)
   const [message, setMessage] = useState<string>("")
@@ -30,13 +30,13 @@ export default function Profile() {
 
       const { data: profileData } = await supabase
         .from("profiles")
-        .select("nickname, is_admin")
+        .select("displayName, is_admin")
         .eq("id", user.id)
         .single()
 
       if (profileData) {
-        setNickname(profileData.nickname || "")
-        setNewNickname(profileData.nickname || "")
+        setDisplayName(profileData.displayName || "")
+        setNewDisplayName(profileData.displayName || "")
         setIsAdmin(profileData.is_admin || false)
       }
     }
@@ -44,16 +44,16 @@ export default function Profile() {
     loadProfile()
   }, [])
 
-  const updateNickname = async () => {
+  const updateDisplayName = async () => {
     setMessage("")
     setErrorMessage("")
 
-    if (!newNickname.trim()) {
-      setErrorMessage("ニックネームを入力してください")
+    if (!newDisplayName.trim()) {
+      setErrorMessage("表示名を入力してください")
       return
     }
 
-    if (newNickname.length < 3 || newNickname.length > 20) {
+    if (newDisplayName.length < 3 || newDisplayName.length > 20) {
       setErrorMessage("3〜20文字で入力してください")
       return
     }
@@ -69,14 +69,14 @@ export default function Profile() {
 
     const { error } = await supabase
       .from("profiles")
-      .update({ nickname: newNickname.trim() })
+      .update({ displayName: newDisplayName.trim() })
       .eq("id", data.user.id)
 
     if (error) {
       setErrorMessage("更新に失敗しました")
     } else {
-      setNickname(newNickname.trim())
-      setMessage("ニックネームを更新しました")
+      setDisplayName(newDisplayName.trim())
+      setMessage("表示名を更新しました")
     }
 
     setLoading(false)
@@ -118,7 +118,7 @@ export default function Profile() {
         <div className="relative group">
 
         <img
-            src={previewUrl || avatarUrl || "/default-avatar.png"}
+            src={previewUrl || avatarUrl || "/default_avatar.png"}
             alt="avatar"
             onClick={() => document.getElementById("avatar-upload")?.click()}
             className="w-32 h-32 rounded-full object-cover border-4 border-purple-400 shadow-lg cursor-pointer transition group-hover:brightness-75"
@@ -135,7 +135,7 @@ export default function Profile() {
         </div>
         </div>
 
-        {/* ニックネーム表示 */}
+        {/* 表示名表示 */}
         <div className="flex items-center gap-3">
           <span
             className={`text-2xl font-semibold ${
@@ -144,7 +144,7 @@ export default function Profile() {
                 : ""
             }`}
           >
-            {nickname || "ニックネーム未設定"}
+            {displayName || "表示名未設定"}
           </span>
 
           {isAdmin && (
@@ -167,22 +167,22 @@ export default function Profile() {
           </div>
         )}
 
-        {/* ニックネーム編集 */}
+        {/* 表示名編集 */}
         <div className="w-full flex flex-col gap-3">
           <input
             type="text"
-            value={newNickname}
-            onChange={(e) => setNewNickname(e.target.value)}
+            value={newDisplayName}
+            onChange={(e) => setNewDisplayName(e.target.value)}
             className="p-3 rounded-lg bg-black/40 border border-white/20 focus:outline-none focus:ring-2 focus:ring-purple-400"
-            placeholder="新しいニックネーム"
+            placeholder="新しい表示名"
           />
 
           <button
-            onClick={updateNickname}
+            onClick={updateDisplayName}
             disabled={loading}
             className="py-3 rounded-lg bg-gradient-to-r from-purple-500 to-indigo-500 hover:scale-105 transition transform shadow-lg font-semibold"
           >
-            {loading ? "更新中..." : "ニックネームを変更"}
+            {loading ? "更新中..." : "表示名を変更"}
           </button>
         </div>
 
