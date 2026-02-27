@@ -24,14 +24,38 @@ export default function Header() {
         return
       }
 
-      const { data: profile } = await supabase
+      const { data: profile, error } = await supabase
         .from("profiles")
         .select("displayName, role")
         .eq("id", user.id)
-        .single()
+        .maybeSingle()
 
-      setDisplayName(profile?.displayName || "")
-      setRole(profile?.role || "user")
+      if (error) {
+        console.error("profile取得エラー:", error)
+        return
+      }
+
+      // 🔥 profileが存在しない場合は自動作成
+      if (!profile) {
+        const { error: insertError } = await supabase
+          .from("profiles")
+          .insert({
+            id: user.id,
+            displayName: "",
+            role: "user",
+          })
+
+        if (insertError) {
+          console.error("profile自動作成失敗:", insertError)
+          return
+        }
+
+        setDisplayName("")
+        setRole("user")
+      } else {
+        setDisplayName(profile.displayName || "")
+        setRole(profile.role || "user")
+      }
 
       const { data: publicUrlData } = supabase
         .storage
@@ -47,10 +71,9 @@ export default function Header() {
   const handleLogout = async () => {
     await supabase.auth.signOut()
     setOpen(false)
-    router.refresh() // ← これ重要
+    router.refresh()
   }
 
-  // 外クリックで閉じる
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (
@@ -91,6 +114,9 @@ export default function Header() {
                 <img
                   src={avatarUrl || "/default_avatar.png"}
                   alt="avatar"
+                  onError={(e) => {
+                    e.currentTarget.src = "/default_avatar.png"
+                  }}
                   className="w-8 h-8 rounded-full object-cover border border-white/30"
                 />
                 <div className="flex items-center gap-2">
@@ -125,6 +151,16 @@ export default function Header() {
                   >
                     プロフィールへ
                   </Link>
+
+                  {role === "admin" && (
+                    <Link
+                      href="/admin"
+                      onClick={() => setOpen(false)}
+                      className="text-red-400"
+                    >
+                      管理画面
+                    </Link>
+                  )}
 
                   <hr className="border-gray-700" />
 

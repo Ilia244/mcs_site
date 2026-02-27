@@ -9,6 +9,7 @@ export default function Profile() {
   const [previewUrl, setPreviewUrl] = useState<string | null>(null)
   const [displayName, setDisplayName] = useState<string>("")
   const [newDisplayName, setNewDisplayName] = useState<string>("")
+  const [role, setRole] = useState<"user" | "admin">("user")
   const [isAdmin, setIsAdmin] = useState<boolean>(false)
   const [loading, setLoading] = useState<boolean>(false)
   const [message, setMessage] = useState<string>("")
@@ -30,14 +31,15 @@ export default function Profile() {
 
       const { data: profileData } = await supabase
         .from("profiles")
-        .select("displayName, is_admin")
+        .select("displayName, role")
         .eq("id", user.id)
         .single()
 
       if (profileData) {
         setDisplayName(profileData.displayName || "")
         setNewDisplayName(profileData.displayName || "")
-        setIsAdmin(profileData.is_admin || false)
+        setRole(profileData.role ?? "user")
+        setIsAdmin(profileData.role === "admin")
       }
     }
 
@@ -118,10 +120,13 @@ export default function Profile() {
         <div className="relative group">
 
         <img
-            src={previewUrl || avatarUrl || "/default_avatar.png"}
-            alt="avatar"
-            onClick={() => document.getElementById("avatar-upload")?.click()}
-            className="w-32 h-32 rounded-full object-cover border-4 border-purple-400 shadow-lg cursor-pointer transition group-hover:brightness-75"
+          src={previewUrl || avatarUrl || "/default_avatar.png"}
+          alt="avatar"
+          onError={(e) => {
+            e.currentTarget.src = "/default_avatar.png"
+          }}
+          onClick={() => document.getElementById("avatar-upload")?.click()}
+          className="w-32 h-32 rounded-full object-cover border-4 border-purple-400 shadow-lg cursor-pointer transition group-hover:brightness-75"
         />
 
         {/* ホバー時オーバーレイ */}

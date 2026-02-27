@@ -70,31 +70,23 @@ export default function SignupPage() {
       password,
     })
 
-    if (error) {
+    if (error || !data.user) {
       setLoading(false)
       setErrorMsg("登録に失敗しました")
       return
     }
 
-    if (!data.user) {
-      setLoading(false)
-      setErrorMsg("ユーザー作成に失敗しました")
-      return
-    }
-
-    // ② profiles作成
-    const { error: profileError } = await supabase
+    // 🔥 ② INSERTはしない
+    // ③ displayNameだけUPDATEする
+    const { error: updateError } = await supabase
       .from("profiles")
-      .insert({
-        id: data.user.id,
-        displayName: trimmedDisplayName,
-        role: "user",
-      })
+      .update({ displayName: trimmedDisplayName })
+      .eq("id", data.user.id)
 
-    if (profileError) {
-      console.error(profileError)
+    if (updateError) {
+      console.error(updateError)
       setLoading(false)
-      setErrorMsg("プロフィール作成に失敗しました")
+      setErrorMsg("プロフィール更新に失敗しました")
       return
     }
 
