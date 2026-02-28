@@ -8,100 +8,84 @@ type News = {
   title: string
   content: string
   created_at: string
+  is_published: boolean
 }
 
 export default function NewsPage() {
   const [newsList, setNewsList] = useState<News[]>([])
-  const [page, setPage] = useState(1)
-  const [totalCount, setTotalCount] = useState(0)
-  const [loading, setLoading] = useState(true)
-
-  const pageSize = 5
+  const [isAdmin, setIsAdmin] = useState(false)
 
   useEffect(() => {
-    const fetchNews = async () => {
-      const from = (page - 1) * pageSize
-      const to = from + pageSize - 1
+    const init = async () => {
+      // ユーザー取得
+      const {
+        data: { user },
+      } = await supabase.auth.getUser()
 
-      const { data, count, error } = await supabase
+      if (user) {
+        const { data: profile } = await supabase
+          .from("profiles")
+          .select("role")
+          .eq("id", user.id)
+          .single()
+
+        if (profile?.role === "admin") {
+          setIsAdmin(true)
+        }
+      }
+
+      // ニュース取得（RLSに任せる）
+      const { data, error } = await supabase
         .from("news")
-        .select("*", { count: "exact" })
+        .select("*")
         .order("created_at", { ascending: false })
-        .range(from, to)
 
       if (error) {
         console.error(error)
         return
       }
 
-      setNewsList(data || [])
-      setTotalCount(count || 0)
-      setLoading(false)
+      setNewsList(data ?? [])
     }
 
-    fetchNews()
-  }, [page])
-
-  const totalPages = Math.ceil(totalCount / pageSize)
+    init()
+  }, [])
 
   return (
     <div className="min-h-screen bg-black text-white p-10">
-      <h1 className="text-4xl font-bold text-cyan-400 mb-8">
+      <h1 className="text-4xl font-bold text-cyan-400">
         最新情報
       </h1>
 
-      {loading && <p>読み込み中...</p>}
-
-      {!loading && newsList.length === 0 && (
-        <p className="text-gray-400">
-          お知らせはまだありません。
-        </p>
-      )}
-
-      <div className="space-y-6">
+      <div className="mt-8 space-y-6">
         {newsList.map((news) => (
           <div
             key={news.id}
-            className="bg-slate-800 p-6 rounded-xl shadow"
+            className={`bg-slate-800 p-6 rounded-xl border
+              ${!news.is_published ? "opacity-70 border-red-500" : "border-slate-700"}
+            `}
           >
-            <h2 className="text-xl font-semibold">
-              {news.title}
-            </h2>
+            <div className="flex justify-between items-center mb-2">
+              <h2 className="text-xl font-bold">
+                {news.title}
+              </h2>
 
-            <p className="text-gray-400 text-sm mt-1">
+              {/* 非公開バッジ */}
+              {isAdmin && !news.is_published && (
+                <span className="px-3 py-1 text-xs rounded-full bg-red-600 text-white">
+                  非公開
+                </span>
+              )}
+            </div>
+
+            <p className="text-sm text-gray-400 mb-2">
               {new Date(news.created_at).toLocaleDateString()}
             </p>
 
-            <p className="mt-4 whitespace-pre-wrap">
-              {news.content}
-            </p>
+            <p>{news.content}</p>
           </div>
         ))}
       </div>
-
-      {totalPages > 1 && (
-        <div className="flex justify-center gap-4 mt-10">
-          <button
-            disabled={page === 1}
-            onClick={() => setPage(page - 1)}
-            className="px-4 py-2 bg-slate-700 rounded disabled:opacity-40"
-          >
-            前へ
-          </button>
-
-          <span>
-            {page} / {totalPages}
-          </span>
-
-          <button
-            disabled={page === totalPages}
-            onClick={() => setPage(page + 1)}
-            className="px-4 py-2 bg-slate-700 rounded disabled:opacity-40"
-          >
-            次へ
-          </button>
-        </div>
-      )}
     </div>
   )
 }

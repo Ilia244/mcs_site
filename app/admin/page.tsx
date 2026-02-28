@@ -11,6 +11,14 @@ type Profile = {
   created_at: string
 }
 
+type News = {
+  id: string
+  title: string
+  content: string
+  created_at: string
+  is_published: boolean
+}
+
 export default function AdminPage() {
   const router = useRouter()
 
@@ -21,41 +29,23 @@ export default function AdminPage() {
   const pageSize = 10
   const [totalCount, setTotalCount] = useState(0)
 
-  const [sortKey, setSortKey] =  useState<"displayName" | "role" | "created_at">("created_at")
-  const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc")
+  const [sortKey, setSortKey] =
+    useState<"displayName" | "role" | "created_at">("created_at")
+  const [sortOrder, setSortOrder] =
+    useState<"asc" | "desc">("desc")
 
-  const [activeTab, setActiveTab] = useState<"dashboard" | "users" | "news" | "stats" | "logs">("dashboard")
+  const [activeTab, setActiveTab] =
+    useState<"dashboard" | "users" | "news" | "stats" | "logs">("dashboard")
 
-  const [newsList, setNewsList] = useState<any[]>([])
+  const [newsList, setNewsList] = useState<News[]>([])
   const [newsTitle, setNewsTitle] = useState("")
   const [newsContent, setNewsContent] = useState("")
   const [editingId, setEditingId] = useState<string | null>(null)
+  const [publishedCount, setPublishedCount] = useState(0)
 
-  const fetchUsers = async () => {
-    const { data, error } = await supabase.rpc(
-      "admin_get_profiles_paginated",
-      {
-        page_number: page,
-        page_size: pageSize,
-        sort_column: sortKey,
-        sort_direction: sortOrder,
-      }
-    )
-
-    if (error) {
-      console.error(error)
-      return
-    }
-
-    setUsers(data || [])
-
-    const { data: count } =
-      await supabase.rpc("admin_get_profiles_count")
-
-    setTotalCount(count || 0)
-    
-  }
-
+  /* =========================
+     初期認証チェック
+  ========================== */
   useEffect(() => {
     const init = async () => {
       const { data: userData } = await supabase.auth.getUser()
@@ -78,11 +68,74 @@ export default function AdminPage() {
 
       await fetchUsers()
       await fetchNews()
+      await fetchPublishedCount()
       setLoading(false)
     }
 
     init()
+  }, [])
+
+  /* =========================
+     ユーザー取得
+  ========================== */
+  const fetchUsers = async () => {
+    const { data } = await supabase.rpc(
+      "admin_get_profiles_paginated",
+      {
+        page_number: page,
+        page_size: pageSize,
+        sort_column: sortKey,
+        sort_direction: sortOrder,
+      }
+    )
+
+    setUsers(data || [])
+
+    const { data: count } =
+      await supabase.rpc("admin_get_profiles_count")
+
+    setTotalCount(count || 0)
+  }
+
+  useEffect(() => {
+    if (!loading) {
+      fetchUsers()
+    }
   }, [page, sortKey, sortOrder])
+
+  /* =========================
+    ニュース取得（管理画面用：全件）
+  ========================== */
+  const fetchNews = async () => {
+    const { data, error } = await supabase
+      .from("news")
+      .select("*", { count: "exact" })
+      .order("created_at", { ascending: false })
+      .returns<News[]>()
+
+    if (error) {
+      console.error("News fetch error:", error)
+      return
+    }
+
+    setNewsList(data ?? [])
+  }
+
+  /* =========================
+    ニュース取得（管理画面用：全件）
+  ========================== */
+  const fetchPublishedCount = async () => {
+    const { count, error } = await supabase
+      .from("news")
+      .select("*", { count: "exact", head: true })
+
+    if (error) {
+      console.error(error)
+      return
+    }
+
+    setPublishedCount(count || 0)
+  }
 
   useEffect(() => {
     if (activeTab === "news") {
@@ -90,38 +143,9 @@ export default function AdminPage() {
     }
   }, [activeTab])
 
-  const toggleRole = async (
-    id: string,
-    currentRole: string
-  ) => {
-    const newRole =
-      currentRole === "admin" ? "user" : "admin"
-
-    const { error } = await supabase.rpc(
-      "admin_update_role",
-      {
-        target_id: id,
-        new_role: newRole,
-      }
-    )
-
-    if (error) {
-      console.error(error)
-      return
-    }
-
-    fetchUsers()
-  }
-
-  const fetchNews = async () => {
-    const { data } = await supabase
-      .from("news")
-      .select("*")
-      .order("created_at", { ascending: false })
-
-    setNewsList(data || [])
-  }
-
+  /* =========================
+     ニュース保存（作成/更新）
+  ========================== */
   const saveNews = async () => {
     if (!newsTitle || !newsContent) return
 
@@ -150,10 +174,35 @@ export default function AdminPage() {
     setNewsTitle("")
     setNewsContent("")
     setEditingId(null)
-
     await fetchNews()
   }
 
+  /* =========================
+     公開切替
+  ========================== */
+  const togglePublish = async (
+    id: string,
+    current: boolean
+  ) => {
+    const { error } = await supabase.rpc(
+      "admin_toggle_news_publish",
+      {
+        news_id: id,
+        new_state: !current,
+      }
+    )
+
+    if (error) {
+      console.error(error)
+      return
+    }
+
+    fetchNews()
+  }
+
+  /* =========================
+     削除
+  ========================== */
   const deleteNews = async (id: string) => {
     if (!confirm("本当に削除しますか？")) return
 
@@ -166,7 +215,33 @@ export default function AdminPage() {
       return
     }
 
-    await fetchNews()
+    fetchNews()
+  }
+
+  /* =========================
+    権限切替
+  ========================== */
+  const toggleRole = async (
+    id: string,
+    currentRole: string
+  ) => {
+    const newRole =
+      currentRole === "admin" ? "user" : "admin"
+
+    const { error } = await supabase.rpc(
+      "admin_update_role",
+      {
+        target_id: id,
+        new_role: newRole,
+      }
+    )
+
+    if (error) {
+      console.error(error)
+      return
+    }
+
+    fetchUsers()
   }
 
   if (loading)
@@ -177,68 +252,28 @@ export default function AdminPage() {
 
       {/* ===== サイドバー ===== */}
       <aside className="w-64 bg-slate-950 p-6 hidden lg:flex flex-col border-r border-slate-800">
-
         <h2 className="text-2xl font-bold mb-10">
           Admin
         </h2>
 
         <nav className="flex flex-col gap-2">
-
-          <button
-            onClick={() => setActiveTab("dashboard")}
-            className={`text-left px-4 py-2 rounded-lg transition ${
-              activeTab === "dashboard"
-                ? "bg-slate-800"
-                : "hover:bg-slate-900"
-            }`}
-          >
-            ダッシュボード
-          </button>
-
-          <button
-            onClick={() => setActiveTab("users")}
-            className={`text-left px-4 py-2 rounded-lg transition ${
-              activeTab === "users"
-                ? "bg-slate-800"
-                : "hover:bg-slate-900"
-            }`}
-          >
-            ユーザー管理
-          </button>
-
-          <button
-            onClick={() => setActiveTab("news")}
-            className={`text-left px-4 py-2 rounded-lg transition ${
-              activeTab === "news"
-                ? "bg-slate-800"
-                : "hover:bg-slate-900"
-            }`}
-          >
-            最新情報管理
-          </button>
-
-          <button
-            onClick={() => setActiveTab("stats")}
-            className={`text-left px-4 py-2 rounded-lg transition ${
-              activeTab === "stats"
-                ? "bg-slate-800"
-                : "hover:bg-slate-900"
-            }`}
-          >
-            統計
-          </button>
-
-          <button
-            onClick={() => setActiveTab("logs")}
-            className={`text-left px-4 py-2 rounded-lg transition ${
-              activeTab === "logs"
-                ? "bg-slate-800"
-                : "hover:bg-slate-900"
-            }`}
-          >
-            ログ
-          </button>
-
+          {["dashboard", "users", "news", "stats", "logs"].map((tab) => (
+            <button
+              key={tab}
+              onClick={() => setActiveTab(tab as any)}
+              className={`text-left px-4 py-2 rounded-lg transition ${
+                activeTab === tab
+                  ? "bg-slate-800"
+                  : "hover:bg-slate-900"
+              }`}
+            >
+              {tab === "dashboard" && "ダッシュボード"}
+              {tab === "users" && "ユーザー管理"}
+              {tab === "news" && "最新情報管理"}
+              {tab === "stats" && "統計"}
+              {tab === "logs" && "ログ"}
+            </button>
+          ))}
         </nav>
 
         <div className="mt-auto text-xs text-gray-600">
@@ -273,8 +308,8 @@ export default function AdminPage() {
                 </div>
 
                 <div className="bg-slate-700 p-6 rounded-xl">
-                  <p className="text-sm text-gray-400">現在ページ</p>
-                  <p className="text-3xl font-bold">{page}</p>
+                  <p className="text-sm text-gray-400">公開中ニュース数</p>
+                  <p className="text-3xl font-bold text-green-400">{publishedCount}</p>
                 </div>
 
               </div>
@@ -327,7 +362,6 @@ export default function AdminPage() {
 
               {/* ユーザー一覧 */}
               <div className="grid grid-cols-2 gap-6">
-
                 {users.map((user) => (
                   <div
                     key={user.id}
@@ -356,64 +390,107 @@ export default function AdminPage() {
                     </button>
                   </div>
                 ))}
+              </div>
 
+              {/* ===== ページネーション ===== */}
+              <div className="mt-8 flex justify-between items-center">
+                <p className="text-sm text-gray-400">
+                  現在ページ: {page} / {Math.ceil(totalCount / pageSize)}
+                </p>
+
+                <div className="flex gap-2">
+                  <button
+                    disabled={page === 1}
+                    onClick={() => setPage(page - 1)}
+                    className="px-4 py-2 bg-slate-700 rounded disabled:opacity-50"
+                  >
+                    前へ
+                  </button>
+
+                  <button
+                    disabled={page >= Math.ceil(totalCount / pageSize)}
+                    onClick={() => setPage(page + 1)}
+                    className="px-4 py-2 bg-slate-700 rounded disabled:opacity-50"
+                  >
+                    次へ
+                  </button>
+                </div>
               </div>
 
             </div>
           )}
 
 
-          {/* ===== News管理 ===== */}
+          {/* ===== ニュース管理 ===== */}
           {activeTab === "news" && (
-            <div className="bg-slate-800 p-8 rounded-2xl shadow">
+            <div className="bg-slate-800 p-8 rounded-2xl shadow space-y-6">
 
-              <h1 className="text-2xl font-bold mb-6">
+              <h1 className="text-2xl font-bold">
                 最新情報管理
               </h1>
 
-              {/* 入力フォーム */}
-              <div className="flex flex-col gap-4 mb-8">
-
+              <div className="space-y-4">
                 <input
-                  value={newsTitle}
-                  onChange={(e) => setNewsTitle(e.target.value)}
+                  type="text"
                   placeholder="タイトル"
-                  className="px-4 py-2 rounded bg-slate-700"
+                  value={newsTitle}
+                  onChange={(e) =>
+                    setNewsTitle(e.target.value)
+                  }
+                  className="w-full p-3 bg-slate-700 rounded"
                 />
 
                 <textarea
-                  value={newsContent}
-                  onChange={(e) => setNewsContent(e.target.value)}
                   placeholder="内容"
-                  className="px-4 py-2 rounded bg-slate-700 h-32"
+                  value={newsContent}
+                  onChange={(e) =>
+                    setNewsContent(e.target.value)
+                  }
+                  rows={5}
+                  className="w-full p-3 bg-slate-700 rounded"
                 />
 
                 <button
                   onClick={saveNews}
                   className="px-4 py-2 bg-cyan-600 rounded"
                 >
-                  {editingId ? "更新する" : "作成する"}
+                  {editingId ? "更新" : "作成"}
                 </button>
-
               </div>
 
-              {/* 一覧 */}
               <div className="space-y-4">
-
                 {newsList.map((news) => (
                   <div
                     key={news.id}
-                    className="bg-slate-700 p-6 rounded-xl"
+                    className="bg-slate-700 p-4 rounded flex justify-between items-center"
                   >
-                    <h2 className="font-semibold">
-                      {news.title}
-                    </h2>
+                    <div>
+                      <p className="font-semibold">
+                        {news.title}
+                      </p>
+                      <p className="text-xs text-gray-400">
+                        {new Date(news.created_at).toLocaleDateString()}
+                      </p>
+                    </div>
 
-                    <p className="text-sm text-gray-300 mt-2">
-                      {news.content}
-                    </p>
-
-                    <div className="flex gap-4 mt-4">
+                    <div className="flex gap-2">
+                      <button
+                        onClick={() =>
+                          togglePublish(
+                            news.id,
+                            news.is_published
+                          )
+                        }
+                        className={`px-3 py-1 rounded ${
+                          news.is_published
+                            ? "bg-green-600"
+                            : "bg-gray-600"
+                        }`}
+                      >
+                        {news.is_published
+                          ? "公開中"
+                          : "非公開"}
+                      </button>
 
                       <button
                         onClick={() => {
@@ -427,16 +504,16 @@ export default function AdminPage() {
                       </button>
 
                       <button
-                        onClick={() => deleteNews(news.id)}
+                        onClick={() =>
+                          deleteNews(news.id)
+                        }
                         className="px-3 py-1 bg-red-600 rounded"
                       >
                         削除
                       </button>
-
                     </div>
                   </div>
                 ))}
-
               </div>
 
             </div>
