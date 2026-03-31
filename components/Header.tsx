@@ -84,6 +84,7 @@ export default function Header() {
             <Link href="/" className="hover:text-cyan-400 transition">ホーム</Link>
             <Link href="/news" className="hover:text-cyan-400 transition">最新情報</Link>
             <Link href="/minecraft" className="hover:text-cyan-400 transition">マイクラ参加型</Link>
+            <Link href="/app/terratech-calculator" className="hover:text-cyan-400 transition">TerraTech</Link>
             <Link href="/rules" className="hover:text-cyan-400 transition">ルール</Link>
           </div>
 
@@ -101,6 +102,7 @@ export default function Header() {
                 <Link href="/" onClick={() => setMenuOpen(false)}>ホーム</Link>
                 <Link href="/news" onClick={() => setMenuOpen(false)}>最新情報</Link>
                 <Link href="/minecraft" onClick={() => setMenuOpen(false)}>マイクラ参加型</Link>
+                <Link href="/app/terratech-calculator" onClick={() => setMenuOpen(false)}>TerraTech</Link>
                 <Link href="/rules" onClick={() => setMenuOpen(false)}>ルール</Link>
               </div>
             )}

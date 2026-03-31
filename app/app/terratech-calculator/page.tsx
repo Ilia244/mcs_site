@@ -118,23 +118,49 @@ export default function TerraCalc() {
 
   const displayList = autoCombine ? getCombinedList() : list;
 
-  const summaryHtml = () => {
+    const summaryHtml = () => {
     const summary: Record<string, { res: number; val: number }> = {};
+
     displayList.forEach(item => {
-      const r = data.resources.find(x => x.name === item.name);
-      const blockSize = data.corps[item.corp];
-      if (!summary[item.corp]) summary[item.corp] = { res: 0, val: 0 };
-      if (mode === 'block') summary[item.corp].res += item.amt * blockSize, summary[item.corp].val += item.amt * blockSize * r!.refined;
-      else summary[item.corp].res += item.amt;
+        const r = data.resources.find(x => x.name === item.name);
+        const blockSize = data.corps[item.corp];
+
+        if (!summary[item.corp]) {
+        summary[item.corp] = { res: 0, val: 0 };
+        }
+
+        if (mode === 'block') {
+        // ブロック → 資源
+        const totalRes = item.amt * blockSize;
+        summary[item.corp].res += totalRes;
+        summary[item.corp].val += totalRes * r!.refined;
+        } else {
+        // 資源 → 合計
+        summary[item.corp].res += item.amt;
+        }
     });
-    return Object.entries(summary).map(([corp, { res, val }]) => (
-      <p key={corp}>
-        {mode === 'block'
-          ? `${corp} → 総資源:${res} / 売却:${val}`
-          : `${corp} → 総資源:${res} / ブロック:${Math.floor(res / data.corps[corp])} / 余り:${res % data.corps[corp]}`}
-      </p>
-    ));
-  };
+
+    return Object.entries(summary).map(([corp, { res, val }]) => {
+        const blockSize = data.corps[corp];
+
+        if (mode === 'block') {
+        return (
+            <p key={corp}>
+            {corp} → 総資源:{res} / 売却:{val}
+            </p>
+        );
+        } else {
+        const blocks = Math.floor(res / blockSize);
+        const remain = res % blockSize;
+
+        return (
+            <p key={corp}>
+            {corp} → 総資源:{res} / 生産ブロック:{blocks} / 余り:{remain}
+            </p>
+        );
+        }
+    });
+    };
 
   const renderCorpList = () => (
     <table className={styles.table}>
