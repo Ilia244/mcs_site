@@ -1,0 +1,32 @@
+{
+  "version": "TerraTech 最新対応用（手動更新）",
+
+  "corps": {
+    "GSO": { "blockSize": 24 },
+    "GEO": { "blockSize": 12 },
+    "VEN": { "blockSize": 6 },
+    "HE":  { "blockSize": 8 },
+    "BF":  { "blockSize": 10 }
+  },
+
+  "resources": [
+    { "name": "Plumbia", "corp": "GSO", "refined": 150 },
+    { "name": "Olastic", "corp": "GSO", "refined": 120 },
+    { "name": "Celestite", "corp": "GSO", "refined": 160 },
+    { "name": "Rubber Jelly", "corp": "GSO", "refined": 90 },
+
+    { "name": "Erudite", "corp": "GEO", "refined": 300 },
+    { "name": "Ignian", "corp": "GEO", "refined": 330 },
+    { "name": "Titanite", "corp": "GEO", "refined": 350 },
+
+    { "name": "Luxite", "corp": "VEN", "refined": 380 },
+    { "name": "Rodite", "corp": "VEN", "refined": 400 },
+    { "name": "Blastcaps", "corp": "VEN", "refined": 360 },
+
+    { "name": "Carbius", "corp": "HE", "refined": 500 },
+    { "name": "Oleite", "corp": "HE", "refined": 480 },
+
+    { "name": "Fibron", "corp": "BF", "refined": 260 },
+    { "name": "Sentinelle", "corp": "BF", "refined": 280 }
+  ]
+}

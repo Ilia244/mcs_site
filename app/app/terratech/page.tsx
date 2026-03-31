@@ -4,12 +4,13 @@ import { useEffect, useState } from "react"
 import { supabase } from "@/lib/supabase"
 import styles from "./style.module.css"
 
-type CorpData = { name: string; block_size: number }
+// Supabase のテーブルに合わせた型定義
+type CorpData = { id: number; name: string; block_size: number }
 type ResourceData = { id: number; name: string; refined_price: number }
 type InputItem = { id: number; corp: string; name: string; amt: number; resource_id: number }
 
 export default function TerraTechCalc() {
-  const [corps, setCorps] = useState<Record<string, number>>({})
+  const [corps, setCorps] = useState<CorpData[]>([])
   const [resources, setResources] = useState<ResourceData[]>([])
   const [list, setList] = useState<InputItem[]>([])
   const [corpSelect, setCorpSelect] = useState("")
@@ -23,35 +24,39 @@ export default function TerraTechCalc() {
   useEffect(() => {
     const init = async () => {
       try {
-        const { data: corpsData } = await supabase.from("corps").select("*")
-        const corpObj: Record<string, number> = {}
-        corpsData?.forEach((c: any) => {
-          corpObj[c.name] = Number(c.block_size)
-        })
-        setCorps(corpObj)
-        setCorpSelect(Object.keys(corpObj)[0] || "")
+        // 企業データ
+        const { data: corpsData, error: corpsError } = await supabase.from<CorpData>("corps").select("*")
+        if (corpsError) throw corpsError
+        if (corpsData) {
+          setCorps(corpsData)
+          setCorpSelect(corpsData[0]?.name || "")
+        }
 
-        const { data: resData } = await supabase.from("resources").select("*")
-        const rList = resData?.map((r: any) => ({
-          id: Number(r.id),
-          name: r.name,
-          refined_price: Number(r.refined_price)
-        })) || []
-        setResources(rList)
-        setResourceSelect(rList[0]?.name || "")
+        // 資源データ
+        const { data: resData, error: resError } = await supabase.from<ResourceData>("resources").select("*")
+        if (resError) throw resError
+        if (resData) {
+          setResources(resData)
+          setResourceSelect(resData[0]?.name || "")
+        }
 
-        const { data: listData } = await supabase.from("input_list").select("*")
-        const mapped: InputItem[] = listData?.map(l => {
-          const res = rList.find(r => r.id === Number(l.resource_id))
-          return {
-            id: Number(l.id),
-            corp: l.corp_name,
-            resource_id: Number(l.resource_id),
-            name: res?.name || "",
-            amt: Number(l.amount)
-          }
-        }) || []
-        setList(mapped)
+        // 入力リスト
+        const { data: listData, error: listError } = await supabase.from("input_list").select("*")
+        if (listError) throw listError
+        if (listData) {
+          const mapped: InputItem[] = listData.map(l => {
+            const res = resData?.find(r => r.id === l.resource_id)
+            return {
+              id: l.id,
+              corp: l.corp_name,
+              resource_id: l.resource_id,
+              name: res?.name || "",
+              amt: l.amount
+            }
+          })
+          setList(mapped)
+        }
+
       } catch (e) {
         console.error(e)
       }
@@ -73,13 +78,11 @@ export default function TerraTechCalc() {
         .select("*")
       if (error) return console.error(error)
       if (data && data[0]) {
-        setList([...list, { id: Number(data[0].id), corp: corpSelect, name: resourceSelect, amt: amount, resource_id: Number(res.id) }])
+        setList([...list, { id: data[0].id, corp: corpSelect, name: resourceSelect, amt: amount, resource_id: res.id }])
       }
     } else {
       const item = list[editIndex]
-      const { error } = await supabase.from("input_list")
-        .update({ amount })
-        .eq("id", item.id)
+      const { error } = await supabase.from("input_list").update({ amount }).eq("id", item.id)
       if (error) return console.error(error)
       const newList = [...list]
       newList[editIndex].amt = amount
@@ -123,7 +126,7 @@ export default function TerraTechCalc() {
     const summary: Record<string, { res: number; val: number }> = {}
     displayList.forEach(item => {
       const price = resources.find(r => r.name === item.name)?.refined_price || 0
-      const blockSize = corps[item.corp] || 1
+      const blockSize = corps.find(c => c.name === item.corp)?.block_size || 1
       if (!summary[item.corp]) summary[item.corp] = { res: 0, val: 0 }
       if (mode === "block") {
         summary[item.corp].res += item.amt * blockSize
@@ -151,7 +154,7 @@ export default function TerraTechCalc() {
 
       <div className={styles.inputRow}>
         <select value={corpSelect} onChange={e => setCorpSelect(e.target.value)} className={styles.select}>
-          {Object.keys(corps).map(c => <option key={c} value={c}>{c}</option>)}
+          {corps.map(c => <option key={c.id} value={c.name}>{c.name}</option>)}
         </select>
 
         <select value={resourceSelect} onChange={e => setResourceSelect(e.target.value)} className={styles.select}>
@@ -160,7 +163,9 @@ export default function TerraTechCalc() {
 
         <input type="number" value={amount} onChange={e => setAmount(Number(e.target.value) || 0)} className={styles.input} />
 
-        <button onClick={addOrUpdate} className={`${styles.button} ${styles.btnAdd}`}>{editIndex === null ? "追加" : "更新"}</button>
+        <button onClick={addOrUpdate} className={`${styles.button} ${styles.btnAdd}`}>
+          {editIndex === null ? "追加" : "更新"}
+        </button>
         <button onClick={toggleAutoCombine} className={`${styles.button} ${styles.btnCombine}`}>
           自動合算: {autoCombine ? "オン" : "オフ"}
         </button>
@@ -169,10 +174,10 @@ export default function TerraTechCalc() {
       <div className={styles.summary}>
         <h2>合計</h2>
         {Object.entries(calcSummary()).map(([corp, s]) => {
-          const blockSize = corps[corp] || 1
-          return mode === "block" ? 
-            <p key={corp}>{corp} → 総資源: {s.res} / 売却: {s.val}</p> :
-            <p key={corp}>{corp} → 総資源: {s.res} / ブロック: {Math.floor(s.res/blockSize)} / 余り: {s.res%blockSize}</p>
+          const blockSize = corps.find(c => c.name === corp)?.block_size || 1
+          return mode === "block"
+            ? <p key={corp}>{corp} → 総資源: {s.res} / 売却: {s.val}</p>
+            : <p key={corp}>{corp} → 総資源: {s.res} / ブロック: {Math.floor(s.res / blockSize)} / 余り: {s.res % blockSize}</p>
         })}
       </div>
 
