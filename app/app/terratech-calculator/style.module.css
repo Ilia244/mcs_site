@@ -1,0 +1,166 @@
+/* ページ全体 */
+.container {
+  padding: 24px;
+  min-height: 100vh;
+  background: linear-gradient(to bottom right, #1a1a2e, #0f0f1f);
+  color: #ffffff;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+/* タイトル */
+.title {
+  font-size: 2rem;
+  margin-bottom: 24px;
+  text-align: center;
+  text-shadow: 0 0 10px #00ffff;
+}
+
+/* セクション */
+.sectionBox {
+  background-color: rgba(30,30,45,0.9);
+  padding: 16px;
+  border-radius: 10px;
+  margin-bottom: 24px;
+  border: 1px solid #444;
+}
+
+.sectionBox h2 {
+  margin-bottom: 12px;
+}
+
+/* 🔥 入力行（ここだけ大幅修正） */
+.inputRow {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 10px;
+  margin-bottom: 16px;
+}
+
+/* 入力系（影響範囲限定） */
+.selectBox,
+.inputBox {
+  width: 100%;
+  min-width: 0;
+  padding: 6px 10px;
+  border-radius: 6px;
+  border: 1px solid #555;
+  background-color: #2a2a3d;
+  color: #ffffff;
+  font-size: 1rem;
+  line-height: 1.6;
+}
+
+/* inputのみ中央寄せ */
+.inputBox {
+  text-align: center;
+}
+
+/* 管理入力はそのまま維持（←ここ重要） */
+.managementInput {
+  padding: 6px 10px;
+  border-radius: 6px;
+  border: 1px solid #555;
+  background-color: #2a2a3d;
+  color: #ffffff;
+  font-size: 1rem;
+  line-height: 1.6;
+  margin-right: 8px;
+  margin-bottom: 8px;
+}
+
+/* フォーカス */
+.selectBox:focus,
+.inputBox:focus,
+.managementInput:focus {
+  outline: none;
+  border-color: #00ffff;
+  box-shadow: 0 0 8px #00ffff;
+}
+
+/* ボタン（inputRow内だけ揃える） */
+.inputRow .button {
+  width: 100%;
+}
+
+/* 通常ボタン（既存維持） */
+.button {
+  padding: 8px 16px;
+  border-radius: 8px;
+  border: none;
+  color: #ffffff;
+  font-weight: bold;
+  cursor: pointer;
+  font-size: 0.95rem;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.button:hover {
+  transform: scale(1.05);
+  box-shadow: 0 0 8px #00ffff;
+}
+
+/* 管理ボタン（そのまま） */
+.managementButton {
+  padding: 6px 12px;
+  margin-right: 6px;
+  margin-bottom: 8px;
+}
+
+/* ボタン色 */
+.btnAdd { background-color: #0dcaf0; }
+.btnCombine { background-color: #6f42c1; }
+.btnEdit { background-color: #28a745; }
+.btnDelete { background-color: #dc3545; }
+.btnReset { background-color: #ff7f50; }
+
+/* テーブル内ボタン（UI維持のため最小変更のみ） */
+.buttonGroup {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+  flex-wrap: wrap; /* ← 崩れ防止だけ追加 */
+}
+
+.buttonGroup .button {
+  flex: 1;
+  min-width: 80px;
+}
+
+/* 合計 */
+.summary {
+  background-color: rgba(0,0,0,0.3);
+  padding: 12px;
+  border-radius: 8px;
+  font-size: 1rem;
+  word-break: break-all;
+}
+
+/* テーブル（完全維持＋最低限の安定化） */
+.listContainer {
+  overflow-x: auto;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: center;
+  min-width: 600px; /* ← これだけ追加（崩れ防止） */
+}
+
+.table th, .table td {
+  border: 1px solid #666;
+  padding: 8px 12px;
+}
+
+.table th {
+  background-color: rgba(0,0,0,0.6);
+  font-weight: bold;
+}
+
+.table tr:nth-child(even) {
+  background-color: rgba(255,255,255,0.05);
+}
+
+.table tr:hover {
+  background-color: rgba(0,255,255,0.1);
+}

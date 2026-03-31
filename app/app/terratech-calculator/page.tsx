@@ -1,5 +1,6 @@
 'use client'
 import { useEffect, useState } from 'react';
+import styles from "./style.module.css";
 
 type Resource = { name: string; refined: number };
 type Data = { corps: Record<string, number>; resources: Resource[] };
@@ -31,7 +32,7 @@ const defaultData: Data = {
     { name: "エルダイトの破片", refined: 155 },
     { name: "エルダイトの結晶", refined: 233 },
     { name: "セレスタイトの破片", refined: 160 },
-    { name: "セレスタイトの結晶", refined: 240 },
+    { name: "セレスタイトの結晶", refined: 240 }
   ],
 };
 
@@ -58,7 +59,7 @@ export default function TerraCalc() {
 
   // リセット
   const resetData = () => {
-    if (!confirm("データを初期化してリセットします。よろしいですか？")) return;
+    if (!confirm("データを初期化してリセットします。")) return;
     localStorage.removeItem('tt_calc_data');
     setData(JSON.parse(JSON.stringify(defaultData)));
     setList([]);
@@ -74,16 +75,12 @@ export default function TerraCalc() {
     if (!amount || amount <= 0) return;
     const item = { corp: selectedCorp, name: selectedRes, amt: amount };
     if (editIndex === null) setList([...list, item]);
-    else {
-      const newList = [...list];
-      newList[editIndex] = item;
-      setList(newList);
-      setEditIndex(null);
-    }
+    else { const newList = [...list]; newList[editIndex] = item; setList(newList); setEditIndex(null); }
     setAmount(1);
   };
 
   const removeItem = (i: number) => {
+    if (!confirm(`入力リストの ${list[i].corp} - ${list[i].name} を削除しますか？`)) return;
     const newList = [...list];
     newList.splice(i, 1);
     setList(newList);
@@ -139,59 +136,134 @@ export default function TerraCalc() {
     ));
   };
 
-  return (
-    <div style={{ padding: 20, background: '#111', color: '#eee', fontFamily: 'sans-serif' }}>
-      <h1>TerraTech 計算機（localStorage版）</h1>
-
-      <div style={{ background: '#222', padding: 10, border: '1px solid #555', marginBottom: 15 }}>
-        <h2>計算モード</h2>
-        <select value={mode} onChange={e => setMode(e.target.value as 'block' | 'raw')}>
-          <option value="block">資源ブロック計算</option>
-          <option value="raw">資源合計計算</option>
-        </select>
-        <br />
-        企業:
-        <select value={selectedCorp} onChange={e => setSelectedCorp(e.target.value)}>
-          {Object.keys(data.corps).map(c => <option key={c} value={c}>{c}</option>)}
-        </select>
-        資源:
-        <select value={selectedRes} onChange={e => setSelectedRes(e.target.value)}>
-          {data.resources.map(r => <option key={r.name} value={r.name}>{r.name}</option>)}
-        </select>
-        個数:
-        <input type="number" value={amount} onChange={e => setAmount(Number(e.target.value))} />
-        <button onClick={addOrUpdate}>{editIndex === null ? '追加' : '更新'}</button>
-        <button onClick={manualCombine}>手動合算</button>
-        <button onClick={toggleAutoCombine}>自動合算: {autoCombine ? 'オン' : 'オフ'}</button>
-        <button onClick={resetData}>リセット</button>
-      </div>
-
-      <h2>合計</h2>
-      <div style={{ background: '#222', padding: 10, border: '1px solid #555', marginBottom: 15 }}>
-        {summaryHtml()}
-      </div>
-
-      <h2>入力リスト</h2>
-      <table style={{ borderCollapse: 'collapse', marginTop: 10, width: '100%' }}>
-        <thead>
-          <tr>
-            <th>企業</th><th>資源</th><th>個数</th><th>操作</th>
+  const renderCorpList = () => (
+    <table className={styles.table}>
+      <thead><tr><th>企業名</th><th>ブロック個数</th><th>操作</th></tr></thead>
+      <tbody>
+        {Object.entries(data.corps).map(([c, blk]) => (
+          <tr key={c}>
+            <td>{c}</td>
+            <td>{blk}</td>
+            <td className={styles.buttonGroup}>
+              <button className={`${styles.button} ${styles.btnEdit}`} onClick={()=>{
+                const newBlk = prompt('ブロック個数を入力', blk.toString());
+                if(!newBlk) return; data.corps[c]=parseInt(newBlk); setData({...data});
+              }}>編集</button>
+              <button className={`${styles.button} ${styles.btnDelete}`} onClick={()=>{
+                if(!confirm(`企業 ${c} を削除しますか？`)) return; delete data.corps[c]; setList(list.filter(l=>l.corp!==c)); setData({...data});
+              }}>削除</button>
+            </td>
           </tr>
-        </thead>
-        <tbody>
-          {displayList.map((item, i) => (
-            <tr key={i}>
-              <td>{item.corp}</td>
-              <td>{item.name}</td>
-              <td>{item.amt}</td>
-              <td>
-                <button onClick={() => editItem(i)}>編集</button>
-                <button onClick={() => removeItem(i)}>削除</button>
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
+        ))}
+      </tbody>
+    </table>
+  );
+
+  const renderResList = () => (
+    <table className={styles.table}>
+      <thead><tr><th>資源名</th><th>単価</th><th>操作</th></tr></thead>
+      <tbody>
+        {data.resources.map((r,i)=>(
+          <tr key={i}>
+            <td>{r.name}</td>
+            <td>{r.refined}</td>
+            <td className={styles.buttonGroup}>
+              <button className={`${styles.button} ${styles.btnEdit}`} onClick={()=>{
+                const name = prompt("資源名", r.name);
+                const price = prompt("単価", r.refined.toString());
+                if(!name||!price) return; r.name=name; r.refined=parseInt(price); setData({...data});
+              }}>編集</button>
+              <button className={`${styles.button} ${styles.btnDelete}`} onClick={()=>{
+                if(!confirm(`資源 ${r.name} を削除しますか？`)) return; data.resources.splice(i,1); setData({...data});
+              }}>削除</button>
+            </td>
+          </tr>
+        ))}
+      </tbody>
+    </table>
+  );
+
+  return (
+    <main className={styles.container}>
+      <h1 className={styles.title}>TerraTech 計算機（localStorage版）</h1>
+
+      <div className={styles.sectionBox}>
+        <h2>計算モード・入力</h2>
+        <div className={styles.inputRow}>
+          <select className={styles.selectBox} value={mode} onChange={e=>setMode(e.target.value as 'block'|'raw')}>
+            <option value="block">資源ブロック計算</option>
+            <option value="raw">資源合計計算</option>
+          </select>
+          <select className={styles.selectBox} value={selectedCorp} onChange={e=>setSelectedCorp(e.target.value)}>
+            {Object.keys(data.corps).map(c=><option key={c} value={c}>{c}</option>)}
+          </select>
+          <select className={styles.selectBox} value={selectedRes} onChange={e=>setSelectedRes(e.target.value)}>
+            {data.resources.map(r=><option key={r.name} value={r.name}>{r.name}</option>)}
+          </select>
+          <input className={styles.inputBox} type="number" value={amount} onChange={e=>setAmount(Number(e.target.value))}/>
+          <button className={`${styles.button} ${styles.btnAdd}`} onClick={addOrUpdate}>{editIndex===null?'追加':'更新'}</button>
+          <button className={`${styles.button} ${styles.btnCombine}`} onClick={manualCombine}>手動合算</button>
+          <button className={`${styles.button} ${styles.btnCombine}`} onClick={toggleAutoCombine}>
+            自動合算: {autoCombine?'オン':'オフ'}
+          </button>
+          <button className={`${styles.button} ${styles.btnReset}`} onClick={resetData}>リセット</button>
+        </div>
+      </div>
+
+      <div className={styles.sectionBox}>
+        <h2>合計</h2>
+        <div className={styles.summary}>{summaryHtml()}</div>
+      </div>
+
+      <div className={styles.sectionBox}>
+        <h2>入力リスト</h2>
+        <div className={styles.listContainer}>
+          <table className={styles.table}>
+            <thead><tr><th>企業</th><th>資源</th><th>個数</th><th>操作</th></tr></thead>
+            <tbody>
+              {displayList.map((item,i)=>(
+                <tr key={i}>
+                  <td>{item.corp}</td>
+                  <td>{item.name}</td>
+                  <td>{item.amt}</td>
+                  <td className={styles.buttonGroup}>
+                    <button className={`${styles.button} ${styles.btnEdit}`} onClick={()=>editItem(i)}>編集</button>
+                    <button className={`${styles.button} ${styles.btnDelete}`} onClick={()=>removeItem(i)}>削除</button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div className={styles.sectionBox}>
+        <h2>企業管理</h2>
+        <div className={styles.inputRow}>
+          <input className={styles.managementInput} placeholder="企業名" id="newCorpName"/>
+          <input className={styles.managementInput} placeholder="ブロック個数" type="number" id="newCorpBlock"/>
+          <button className={`${styles.button} ${styles.managementButton} ${styles.btnAdd}`} onClick={()=>{
+            const name=(document.getElementById('newCorpName') as HTMLInputElement).value.trim();
+            const blk=parseInt((document.getElementById('newCorpBlock') as HTMLInputElement).value);
+            if(!name||!blk) return; data.corps[name]=blk; setData({...data});
+          }}>追加</button>
+        </div>
+        {renderCorpList()}
+      </div>
+
+      <div className={styles.sectionBox}>
+        <h2>資源管理</h2>
+        <div className={styles.inputRow}>
+          <input className={styles.managementInput} placeholder="資源名" id="newResName"/>
+          <input className={styles.managementInput} placeholder="単価" type="number" id="newResPrice"/>
+          <button className={`${styles.button} ${styles.managementButton} ${styles.btnAdd}`} onClick={()=>{
+            const name=(document.getElementById('newResName') as HTMLInputElement).value.trim();
+            const price=parseInt((document.getElementById('newResPrice') as HTMLInputElement).value);
+            if(!name||!price) return; data.resources.push({name,refined:price}); setData({...data});
+          }}>追加</button>
+        </div>
+        {renderResList()}
+      </div>
+    </main>
   );
 }
