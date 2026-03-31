@@ -1,0 +1,133 @@
+/* style.module.css */
+
+/* ページ全体の背景と余白 */
+.container {
+  padding: 24px;
+  min-height: 100vh;
+  background: linear-gradient(to bottom right, #1a1a2e, #0f0f1f);
+  color: #ffffff;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+/* タイトル */
+.title {
+  font-size: 2rem;
+  margin-bottom: 16px;
+  text-shadow: 0 0 10px #00ffff;
+  text-align: center;
+}
+
+/* 計算モードセレクター */
+.modeSelector {
+  margin-bottom: 16px;
+}
+
+/* ラベル内テキストと選択ボックスの余白 */
+.modeSelector label {
+  display: flex;
+  align-items: center;
+  gap: 8px; /* テキストとselectの間の余白 */
+}
+
+.modeSelector select {
+  background-color: #1f1f2e;
+  color: #ffffff;
+  border: 1px solid #555;
+  padding: 4px 8px;
+  border-radius: 6px;
+}
+
+.modeSelector select:focus {
+  outline: none;
+  border-color: #00ffff;
+  box-shadow: 0 0 8px #00ffff;
+}
+
+/* 入力欄とボタンを横並び */
+.inputRow {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 24px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.inputRow select, .inputRow input {
+  background-color: #1f1f2e;
+  color: #ffffff;
+  border: 1px solid #555;
+  padding: 4px 8px;
+  border-radius: 6px;
+  text-align: center;
+}
+
+.inputRow select:focus, .inputRow input:focus {
+  outline: none;
+  border-color: #00ffff;
+  box-shadow: 0 0 8px #00ffff;
+}
+
+/* ボタン共通 */
+.button {
+  padding: 6px 12px;
+  border-radius: 8px;
+  border: none;
+  color: #ffffff;
+  font-weight: bold;
+  cursor: pointer;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.button:hover {
+  transform: scale(1.05);
+}
+
+/* ボタン色別 */
+.btnAdd {
+  background-color: #0dcaf0;
+}
+
+.btnCombine {
+  background-color: #6f42c1;
+}
+
+.btnEdit {
+  background-color: #28a745;
+}
+
+.btnDelete {
+  background-color: #dc3545;
+}
+
+/* 合計表示 */
+.summary {
+  margin-bottom: 24px;
+  background-color: rgba(0,0,0,0.3);
+  padding: 12px;
+  border-radius: 8px;
+}
+
+/* 入力リストテーブル */
+.listContainer {
+  overflow-x: auto;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: center;
+}
+
+.table th, .table td {
+  border: 1px solid #cccccc;
+  padding: 8px;
+}
+
+.table th {
+  background-color: rgba(0,0,0,0.5);
+  font-weight: bold;
+}
+
+.table tr:nth-child(even) {
+  background-color: rgba(255,255,255,0.05);
+}

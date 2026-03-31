@@ -52,7 +52,7 @@ export default function NewsPage() {
   }, [])
 
   return (
-    <div className="min-h-screen bg-black text-white p-10">
+    <div className="min-h-screen bg-black text-white p-4 md:p-10">
       <h1 className="text-4xl font-bold text-cyan-400">
         最新情報
       </h1>

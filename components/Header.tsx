@@ -5,6 +5,8 @@ import { useEffect, useState, useRef } from "react"
 import { useRouter } from "next/navigation"
 import { supabase } from "@/lib/supabase"
 import { useAuth } from "@/app/providers/AuthProvider"
+import RoleBadge from "@/components/RoleBadge"
+import { hasPermission } from "@/lib/role"
 
 export default function Header() {
   const { user } = useAuth()
@@ -12,57 +14,32 @@ export default function Header() {
   const [avatarUrl, setAvatarUrl] = useState("")
   const [role, setRole] = useState("user")
   const [open, setOpen] = useState(false)
+  const [menuOpen, setMenuOpen] = useState(false)
+
   const dropdownRef = useRef<HTMLDivElement>(null)
+  const menuRef = useRef<HTMLDivElement>(null)
   const router = useRouter()
 
   useEffect(() => {
     const loadProfile = async () => {
-      if (!user) {
-        setDisplayName("")
-        setAvatarUrl("")
-        setRole("user")
-        return
-      }
+      if (!user) return
 
-      const { data: profile, error } = await supabase
+      const { data: profile } = await supabase
         .from("profiles")
         .select("displayName, role")
         .eq("id", user.id)
         .maybeSingle()
 
-      if (error) {
-        console.error("profile取得エラー:", error)
-        return
-      }
-
-      // 🔥 profileが存在しない場合は自動作成
-      if (!profile) {
-        const { error: insertError } = await supabase
-          .from("profiles")
-          .insert({
-            id: user.id,
-            displayName: "",
-            role: "user",
-          })
-
-        if (insertError) {
-          console.error("profile自動作成失敗:", insertError)
-          return
-        }
-
-        setDisplayName("")
-        setRole("user")
-      } else {
+      if (profile) {
         setDisplayName(profile.displayName || "")
         setRole(profile.role || "user")
       }
 
-      const { data: publicUrlData } = supabase
-        .storage
+      const { data } = supabase.storage
         .from("avatars")
         .getPublicUrl(`${user.id}.png`)
 
-      setAvatarUrl(publicUrlData.publicUrl)
+      setAvatarUrl(data.publicUrl)
     }
 
     loadProfile()
@@ -71,109 +48,121 @@ export default function Header() {
   const handleLogout = async () => {
     await supabase.auth.signOut()
     setOpen(false)
+    setMenuOpen(false)
     router.refresh()
   }
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (
-        dropdownRef.current &&
-        !dropdownRef.current.contains(event.target as Node)
-      ) {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
         setOpen(false)
+      }
+      if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
+        setMenuOpen(false)
       }
     }
 
     document.addEventListener("mousedown", handleClickOutside)
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside)
-    }
+    return () => document.removeEventListener("mousedown", handleClickOutside)
   }, [])
 
+  // ✅ 管理画面は level80以上
+  const canAccessAdmin = hasPermission(role, 80)
+
   return (
-    <nav className="flex justify-between items-center px-8 py-4 bg-gradient-to-r from-purple-900 to-cyan-900 shadow-lg relative">
-      <h1 className="text-xl font-bold text-cyan-400 drop-shadow-[0_0_10px_#00ffff]">
-        Ilia./衣李亜 | MCS公式
-      </h1>
+    <nav className="w-full bg-gradient-to-r from-purple-900 to-cyan-900 shadow-lg px-6 py-4 relative">
+      <div className="flex justify-between items-center w-full">
 
-      <div className="flex gap-6 items-center">
-        <Link href="/">ホーム</Link>
-        <Link href="/news">最新情報</Link>
-        <Link href="/minecraft">マイクラ参加型</Link>
-        <Link href="/rules">ルール</Link>
+        <h1 className="text-lg lg:text-xl font-bold text-cyan-400 whitespace-nowrap">
+          Ilia./衣李亜 | MCS公式
+        </h1>
 
-        <div className="relative" ref={dropdownRef}>
-          <button
-            onClick={() => setOpen(!open)}
-            className="flex items-center gap-2 px-4 py-2 bg-cyan-500 rounded-xl hover:scale-110 transition shadow-[0_0_10px_#00ffff]"
-          >
-            {!user ? (
-              "ログイン"
-            ) : (
-              <>
-                <img
-                  src={avatarUrl || "/default_avatar.png"}
-                  alt="avatar"
-                  onError={(e) => {
-                    e.currentTarget.src = "/default_avatar.png"
-                  }}
-                  className="w-8 h-8 rounded-full object-cover border border-white/30"
-                />
-                <div className="flex items-center gap-2">
-                  <span>{displayName || "未設定"}</span>
+        <div className="flex items-center gap-4">
 
-                  {role === "admin" && (
-                    <span className="px-2 py-0.5 text-xs bg-red-600 rounded-md shadow">
-                      ADMIN
-                    </span>
-                  )}
-                </div>
-              </>
+          {/* PCナビ */}
+          <div className="hidden lg:flex gap-6 text-sm">
+            <Link href="/" className="hover:text-cyan-400 transition">ホーム</Link>
+            <Link href="/news" className="hover:text-cyan-400 transition">最新情報</Link>
+            <Link href="/minecraft" className="hover:text-cyan-400 transition">マイクラ参加型</Link>
+            <Link href="/rules" className="hover:text-cyan-400 transition">ルール</Link>
+          </div>
+
+          {/* モバイルメニュー */}
+          <div className="relative lg:hidden" ref={menuRef}>
+            <button
+              onClick={() => setMenuOpen(!menuOpen)}
+              className="text-2xl"
+            >
+              ☰
+            </button>
+
+            {menuOpen && (
+              <div className="absolute right-0 mt-3 w-52 bg-slate-900 border border-slate-700 rounded-xl shadow-xl p-4 flex flex-col gap-3 text-sm z-50">
+                <Link href="/" onClick={() => setMenuOpen(false)}>ホーム</Link>
+                <Link href="/news" onClick={() => setMenuOpen(false)}>最新情報</Link>
+                <Link href="/minecraft" onClick={() => setMenuOpen(false)}>マイクラ参加型</Link>
+                <Link href="/rules" onClick={() => setMenuOpen(false)}>ルール</Link>
+              </div>
             )}
-          </button>
+          </div>
 
-          {open && (
-            <div className="absolute right-0 mt-3 w-48 bg-gray-900 border border-gray-700 rounded-xl shadow-xl p-3 flex flex-col gap-3 z-50">
+          {/* アカウント */}
+          <div className="relative" ref={dropdownRef}>
+            <button
+              onClick={() => setOpen(!open)}
+              className="flex items-center gap-2 px-3 py-2 bg-cyan-500 rounded-xl hover:scale-105 transition min-w-0"
+            >
               {!user ? (
-                <>
-                  <Link href="/account/login" onClick={() => setOpen(false)}>
-                    ログイン
-                  </Link>
-                  <Link href="/account/signup" onClick={() => setOpen(false)}>
-                    新規作成
-                  </Link>
-                </>
+                "ログイン"
               ) : (
                 <>
-                  <Link
-                    href="/account/profile"
-                    onClick={() => setOpen(false)}
-                  >
-                    プロフィールへ
-                  </Link>
-
-                  {role === "admin" && (
-                    <Link
-                      href="/admin"
-                      onClick={() => setOpen(false)}
-                      className="text-red-400"
-                    >
-                      管理画面
-                    </Link>
-                  )}
-
-                  <hr className="border-gray-700" />
-
-                  <button
-                    onClick={handleLogout}
-                    className="text-red-400 text-left"
-                  >
-                    ログアウト
-                  </button>
+                  <img
+                    src={avatarUrl || "/default_avatar.png"}
+                    alt="avatar"
+                    onError={(e) => {
+                      e.currentTarget.src = "/default_avatar.png"
+                    }}
+                    className="w-8 h-8 rounded-full object-cover border border-white/30 shrink-0"
+                  />
+                  <span className="max-w-[100px] truncate">
+                    {displayName || "未設定"}
+                  </span>
+                  <RoleBadge role={role} />
                 </>
               )}
-            </div>
-          )}
+            </button>
+
+            {open && (
+              <div className="absolute right-0 mt-3 w-52 bg-gray-900 border border-gray-700 rounded-xl shadow-xl p-3 flex flex-col gap-3 text-sm z-50">
+                {!user ? (
+                  <>
+                    <Link href="/account/login">ログイン</Link>
+                    <Link href="/account/signup">新規作成</Link>
+                  </>
+                ) : (
+                  <>
+                    <Link href="/account/profile">プロフィールへ</Link>
+
+                    {canAccessAdmin && (
+                      <Link href="/admin" className="text-red-400">
+                        管理画面
+                      </Link>
+                    )}
+
+                    <hr className="border-gray-700" />
+
+                    <button
+                      onClick={handleLogout}
+                      className="text-red-400 text-left"
+                    >
+                      ログアウト
+                    </button>
+                  </>
+                )}
+              </div>
+            )}
+          </div>
+
         </div>
       </div>
     </nav>

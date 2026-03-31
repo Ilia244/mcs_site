@@ -19,8 +19,234 @@
   }
 }
 
+@media (max-width: 768px) {
+  .hero-mc {
+    background-position: center top;
+  }
+  .bg-home {
+    background-position: center top;
+  }
+}
+
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-geist-sans);
+}
+
+.pixel-font {
+  text-shadow: 2px 2px 0 #000;
+}
+
+h1, h2, h3, .pixel-font {
+  font-family: var(--font-pixel);
+}
+
+.fade-up {
+  opacity: 0;
+  transform: translateY(20px);
+  transition: all 0.6s ease;
+}
+.fade-up.show {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.title-pop {
+  animation: pixelIn 0.5s steps(5) forwards;
+}
+
+/* ===== レスポンシブヒーロー ===== */
+.hero-mc {
+  min-height: 100svh;
+  width: 100%;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+
+  background-image:
+    linear-gradient(to bottom, rgba(0,0,0,0.4), rgba(0,0,0,0.85)),
+    url("/bg/mc-hero.jpg");
+
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+}
+
+.section-mc {
+  background-image:
+    linear-gradient(to bottom, rgba(0,0,0,0.75), rgba(0,0,0,0.9)),
+    url("/bg/mc-lake.jpg");
+  background-size: cover;
+  background-position: center;
+}
+
+.texture-overlay::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: url("/bg/mc-dark.png");
+  opacity: 0.15;
+  pointer-events: none;
+}
+
+/* 共通背景ベース */
+.page-bg {
+  animation: slowZoom 20s ease-in-out infinite alternate;
+  min-height: 100svh;
+  width: 100%;
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  position: relative;
+}
+
+/* 暗幕レイヤー */
+.page-bg::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    to bottom,
+    rgba(0,0,0,0.55),
+    rgba(0,0,0,0.85)
+  );
+  z-index: 0;
+}
+
+@keyframes slowZoom {
+  from { background-size: 100%; }
+  to { background-size: 110%; }
+}
+
+.page-content {
+  position: relative;
+  z-index: 1;
+}
+
+/* ===== 各ページ背景 ===== */
+
+.bg-home {
+  background-image: url("/bg/mc-hero.jpg");
+}
+
+.bg-project {
+  background-image: url("/bg/mc-forest.jpg");
+}
+
+.bg-join {
+  background-image: url("/bg/mc-lake.jpg");
+}
+
+.bg-about {
+  background-image: url("/bg/mc-dark.png");
+}
+
+.bg-special {
+  background-image: url("/bg/mc-logo.jpg");
+}
+
+/* ===== Minecraft風 背景 ===== */
+.mc-bg {
+  background:
+    linear-gradient(to bottom, #3a5f0b 0%, #1b2f05 200px, #0f172a 200px);
+  position: relative;
+  overflow: hidden;
+}
+
+/* ピクセルグリッド */
+.mc-bg::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-image:
+    repeating-linear-gradient(
+      0deg,
+      rgba(0,0,0,0.15) 0px,
+      rgba(0,0,0,0.15) 1px,
+      transparent 1px,
+      transparent 16px
+    ),
+    repeating-linear-gradient(
+      90deg,
+      rgba(0,0,0,0.15) 0px,
+      rgba(0,0,0,0.15) 1px,
+      transparent 1px,
+      transparent 16px
+    );
+  pointer-events: none;
+}
+
+/* ===== Apex HUD風 パネル ===== */
+.hud-panel {
+  position: relative;
+  background: rgba(15, 23, 42, 0.9);
+  border: 1px solid rgba(255, 120, 0, 0.4);
+  clip-path: polygon(
+    0 10px,
+    10px 0,
+    100% 0,
+    100% calc(100% - 10px),
+    calc(100% - 10px) 100%,
+    0 100%
+  );
+}
+
+/* HUDライン */
+.hud-panel::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 2px;
+  width: 100%;
+  background: linear-gradient(to right, #ff4800, transparent);
+}
+
+/* スキャンライン */
+.scan-lines {
+  position: relative;
+}
+
+.scan-lines::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: repeating-linear-gradient(
+    0deg,
+    transparent,
+    transparent 2px,
+    rgba(255,255,255,0.03) 3px
+  );
+  pointer-events: none;
+}
+
+/* ===== ポップイン ===== */
+.pixel-pop {
+  transform: scale(0.8);
+  opacity: 0;
+  animation: pixelIn 0.4s steps(4) forwards;
+}
+
+@keyframes pixelIn {
+  0% {
+    transform: scale(0.8);
+    opacity: 0;
+  }
+  50% {
+    transform: scale(1.1);
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+/* ホバーでブロック浮き */
+.block-hover:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 6px 0 #000;
+  transition: all 0.1s steps(2);
 }
