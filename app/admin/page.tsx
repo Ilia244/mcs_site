@@ -34,7 +34,12 @@ export default function AdminPage() {
   const [totalCount, setTotalCount] = useState(0)
   const [sidebarOpen, setSidebarOpen] = useState(false)
 
-  const [activeTab, setActiveTab] = useState<"dashboard" | "users" | "news" | "stats" | "logs">("dashboard")
+  const [activeTab, setActiveTab] = useState<"dashboard" | "users" | "news" | "stream" | "stats" | "logs">("dashboard")
+  const [streamLive, setStreamLive] = useState(false)
+  const [streamTitle, setStreamTitle] = useState("みんなでサバイバル！")
+  const [streamDescription, setStreamDescription] = useState("")
+  const [streamYoutube, setStreamYoutube] = useState("")
+  const [streamParticipation, setStreamParticipation] = useState(true)
   const [sortKey, setSortKey] = useState<"displayName" | "role" | "created_at">("created_at")
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc")
 
@@ -75,6 +80,7 @@ export default function AdminPage() {
       await fetchUsers()
       await fetchNews()
       await fetchPublishedCount()
+      await fetchStreamSettings()
 
       setLoading(false)
     }
@@ -132,6 +138,33 @@ export default function AdminPage() {
   useEffect(() => {
     if (activeTab === "news") fetchNews()
   }, [activeTab])
+
+
+  const fetchStreamSettings = async () => {
+    const { data } = await supabase.from("site_settings").select("key,value").in("key", [
+      "stream_live", "stream_title", "stream_description", "stream_youtube_url", "stream_participation_enabled"
+    ])
+    for (const row of data ?? []) {
+      if (row.key === "stream_live") setStreamLive(row.value === "true")
+      if (row.key === "stream_title") setStreamTitle(row.value)
+      if (row.key === "stream_description") setStreamDescription(row.value)
+      if (row.key === "stream_youtube_url") setStreamYoutube(row.value)
+      if (row.key === "stream_participation_enabled") setStreamParticipation(row.value !== "false")
+    }
+  }
+
+  const saveStreamSettings = async () => {
+    const values = [
+      ["stream_live", String(streamLive)],
+      ["stream_title", streamTitle],
+      ["stream_description", streamDescription],
+      ["stream_youtube_url", streamYoutube],
+      ["stream_participation_enabled", String(streamParticipation)],
+    ]
+    const { error } = await supabase.rpc("admin_save_site_settings", { settings: values })
+    if (error) { console.error(error); alert("保存に失敗しました。Supabaseのportal.sqlを適用してください。"); return }
+    alert("配信設定を保存しました")
+  }
 
   /* =========================
      ニュース保存
@@ -281,7 +314,7 @@ export default function AdminPage() {
         </h2>
 
         <nav className="flex flex-col gap-2">
-          {["dashboard", "users", "news", "stats", "logs"].map((tab) => (
+          {["dashboard", "users", "news", "stream", "stats", "logs"].map((tab) => (
             <button
               key={tab}
               onClick={() => {
@@ -297,6 +330,7 @@ export default function AdminPage() {
               {tab === "dashboard" && "ダッシュボード"}
               {tab === "users" && "ユーザー管理"}
               {tab === "news" && "最新情報管理"}
+              {tab === "stream" && "参加型配信設定"}
               {tab === "stats" && "統計"}
               {tab === "logs" && "ログ"}
             </button>
@@ -349,6 +383,25 @@ export default function AdminPage() {
             </div>
           )}
 
+
+          {/* ===== 参加型配信設定 ===== */}
+          {activeTab === "stream" && (
+            <div className="bg-slate-800 p-4 md:p-8 rounded-2xl shadow">
+              <h1 className="text-2xl font-bold mb-2">参加型配信設定</h1>
+              <p className="text-sm text-gray-400 mb-6">トップページと参加ページのLIVE表示をここから切り替えられます。</p>
+              <div className="space-y-5 max-w-2xl">
+                <label className="flex items-center gap-3 p-4 bg-slate-700 rounded-xl">
+                  <input type="checkbox" checked={streamLive} onChange={e => setStreamLive(e.target.checked)} className="w-5 h-5" />
+                  <span><b>🔴 参加型配信中</b><small className="block text-gray-400">ONにするとサイト全体でLIVE表示になります。</small></span>
+                </label>
+                <label className="block"><span className="text-sm text-gray-400">配信タイトル</span><input value={streamTitle} onChange={e => setStreamTitle(e.target.value)} className="w-full mt-2 p-3 rounded-lg bg-slate-700" /></label>
+                <label className="block"><span className="text-sm text-gray-400">説明</span><textarea value={streamDescription} onChange={e => setStreamDescription(e.target.value)} className="w-full mt-2 p-3 rounded-lg bg-slate-700 min-h-28" /></label>
+                <label className="block"><span className="text-sm text-gray-400">YouTube配信URL</span><input value={streamYoutube} onChange={e => setStreamYoutube(e.target.value)} className="w-full mt-2 p-3 rounded-lg bg-slate-700" placeholder="https://www.youtube.com/watch?v=..." /></label>
+                <label className="flex items-center gap-3"><input type="checkbox" checked={streamParticipation} onChange={e => setStreamParticipation(e.target.checked)} className="w-5 h-5" /> 参加受付を有効にする</label>
+                <button onClick={saveStreamSettings} className="px-6 py-3 bg-cyan-600 hover:bg-cyan-500 rounded-lg font-bold">設定を保存</button>
+              </div>
+            </div>
+          )}
 
           {/* ===== ユーザー管理 ===== */}
           {activeTab === "users" && (
