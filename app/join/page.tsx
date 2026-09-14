@@ -3,11 +3,14 @@
 import Link from "next/link"
 import { Suspense } from "react"
 import { useSearchParams } from "next/navigation"
+
 import { SITE_CONFIG, STREAM_CONFIG } from "@/lib/site-config"
 
 function JoinContent() {
   const params = useSearchParams()
+
   const selected = params.get("server") ?? "survival"
+
   const server =
     SITE_CONFIG.servers.find((item) => item.id === selected) ??
     SITE_CONFIG.servers[0]
@@ -20,19 +23,15 @@ function JoinContent() {
         </Link>
 
         <div className="mt-6 mb-10">
-<<<<<<< Updated upstream
-          <p className="section-kicker">JOIN IRYIASERVER</p>
+          <p className="section-kicker">MCS / JOIN</p>
+
           <h1 className="text-4xl md:text-5xl font-bold">
             Minecraft参加方法
           </h1>
+
           <p className="text-gray-400 mt-4">
             配信を見ながら、このページの手順で参加できます。
           </p>
-=======
-          <p className="section-kicker">MCS / JOIN</p>
-          <h1 className="text-4xl md:text-5xl font-bold">Minecraft参加方法</h1>
-          <p className="text-gray-400 mt-4">配信を見ながら、このページの手順で参加できます。</p>
->>>>>>> Stashed changes
         </div>
 
         {STREAM_CONFIG.live && STREAM_CONFIG.participationEnabled && (
@@ -41,6 +40,7 @@ function JoinContent() {
               <p className="text-xs text-red-400 font-bold tracking-widest">
                 🔴 PARTICIPATION OPEN
               </p>
+
               <h2 className="text-xl font-bold mt-1">
                 {STREAM_CONFIG.title}
               </h2>
@@ -59,6 +59,7 @@ function JoinContent() {
 
         <section className="portal-panel">
           <p className="section-kicker">STEP 01</p>
+
           <h2 className="text-2xl font-bold mt-1">
             参加するサーバーを選択
           </h2>
@@ -90,6 +91,7 @@ function JoinContent() {
 
         <section className="portal-panel mt-5">
           <p className="section-kicker">STEP 02</p>
+
           <h2 className="text-2xl font-bold mt-1">
             接続情報
           </h2>
@@ -156,7 +158,6 @@ function JoinContent() {
   )
 }
 
-<<<<<<< Updated upstream
 function JoinLoading() {
   return (
     <div className="portal-bg min-h-screen text-white">
@@ -177,10 +178,4 @@ export default function JoinPage() {
       <JoinContent />
     </Suspense>
   )
-=======
-function JoinLoading() { return <div className="portal-bg min-h-screen text-white"><main className="max-w-5xl mx-auto px-5 py-14 text-gray-400">読み込み中…</main></div> }
-
-export default function JoinPage() {
-  return <Suspense fallback={<JoinLoading />}><JoinContent /></Suspense>
->>>>>>> Stashed changes
 }
