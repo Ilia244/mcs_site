@@ -1,31 +1,4 @@
 "use client"
-
-import { useEffect, useState } from "react"
-import Link from "next/link"
-import { supabase } from "@/lib/supabase"
-
-type News = { id: string; title: string; content: string; created_at: string; is_published: boolean }
-
-export default function NewsPage() {
-  const [newsList, setNewsList] = useState<News[]>([])
-  useEffect(() => {
-    supabase.from("news").select("*").eq("is_published", true).order("created_at", { ascending: false }).then(({ data }) => setNewsList(data ?? []))
-  }, [])
-  return (
-    <div className="portal-bg min-h-screen text-white">
-      <main className="relative z-10 max-w-5xl mx-auto px-5 py-14">
-        <Link href="/" className="text-cyan-300 text-sm">← ホームへ戻る</Link>
-        <div className="mt-6 mb-10"><p className="section-kicker">INFORMATION</p><h1 className="text-4xl md:text-5xl font-bold">最新情報</h1></div>
-        <div className="space-y-4">
-          {newsList.length ? newsList.map(item => (
-            <article key={item.id} className="portal-panel">
-              <p className="text-xs text-gray-500">{new Date(item.created_at).toLocaleDateString("ja-JP")}</p>
-              <h2 className="text-2xl font-bold mt-2">{item.title}</h2>
-              <p className="text-gray-300 mt-4 whitespace-pre-wrap leading-relaxed">{item.content}</p>
-            </article>
-          )) : <div className="portal-panel text-gray-400">現在公開されているお知らせはありません。</div>}
-        </div>
-      </main>
-    </div>
-  )
-}
+import {useEffect,useState} from "react";import Link from "next/link";import {supabase} from "@/lib/supabase"
+type P={id:string;title:string;content:string;created_at:string;type:string;status:string;tags:any[]}
+export default function NewsPage(){const[data,setData]=useState<P[]>([]);useEffect(()=>{supabase.from("posts").select("id,title,content,created_at,type,status,post_tags(tags(name,color,icon))").eq("status","published").order("published_at",{ascending:false}).then(({data})=>setData((data||[]).map((x:any)=>({...x,tags:(x.post_tags||[]).map((t:any)=>t.tags)}))))},[]);return <div className="portal-bg min-h-screen text-white"><main className="relative z-10 max-w-5xl mx-auto px-5 py-14"><Link href="/" className="text-cyan-300 text-sm">← ホームへ戻る</Link><div className="mt-6 mb-10"><p className="section-kicker">INFORMATION</p><h1 className="text-4xl md:text-5xl font-bold">お知らせ</h1><p className="text-gray-400 mt-3">運営情報・イベント・MCS・配信・YouTubeなどの最新情報。</p></div><div className="space-y-4">{data.length?data.map(p=><Link href={`/news/${p.id}`} key={p.id} className="portal-panel block-hover"><div className="flex gap-2 flex-wrap">{p.tags?.map((t:any)=><span key={t.name} className="tag-pill" style={{borderColor:t.color,color:t.color}}>{t.icon} {t.name}</span>)}</div><p className="text-xs text-gray-500 mt-3">{new Date(p.created_at).toLocaleDateString("ja-JP")}</p><h2 className="text-2xl font-bold mt-2">{p.title}</h2><p className="text-gray-300 mt-4 whitespace-pre-wrap leading-relaxed line-clamp-4">{p.content}</p></Link>):<div className="portal-panel text-gray-400">現在公開されているお知らせはありません。</div>}</div></main></div>}

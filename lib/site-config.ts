@@ -1,36 +1,16 @@
 export const SITE_CONFIG = {
-  name: "IRyiaServer",
-  subtitle: "Minecraft Community Portal",
-  youtube: "https://www.youtube.com/@YOUR_CHANNEL",
+  name: "Ilia./衣李亜",
+  subtitle: "Official Portal",
+  youtube: "https://www.youtube.com/@Ilia244",
   discord: "https://discord.com/",
   dynmap: "",
   servers: [
-    {
-      id: "survival",
-      name: "SURVIVAL",
-      label: "サバイバル",
-      description: "みんなで遊ぶメインサーバー",
-      edition: "Java / Bedrock",
-    },
-    {
-      id: "creative",
-      name: "CREATIVE",
-      label: "クリエイティブ",
-      description: "建築・制作を楽しむサーバー",
-      edition: "Java / Bedrock",
-    },
-    {
-      id: "event",
-      name: "EVENT",
-      label: "イベント",
-      description: "参加型企画・イベント用サーバー",
-      edition: "Java / Bedrock",
-    },
+    { id: "survival", name: "SURVIVAL", label: "サバイバル", description: "みんなで遊ぶメインサーバー", edition: "Java / Bedrock" },
+    { id: "creative", name: "CREATIVE", label: "クリエイティブ", description: "建築・制作を楽しむサーバー", edition: "Java / Bedrock" },
+    { id: "event", name: "EVENT", label: "イベント", description: "参加型企画・イベント用サーバー", edition: "Java / Bedrock" },
   ],
 } as const
 
-// 配信中の表示は、現在はここを変更して運用できます。
-// 将来的に Supabase / Minecraft API と接続して自動化できます。
 export const STREAM_CONFIG = {
   live: false,
   title: "みんなでサバイバル！",
@@ -41,3 +21,14 @@ export const STREAM_CONFIG = {
   participationEnabled: true,
   nextStream: "次回配信日時はYouTubeで告知します。",
 } as const
+
+export const POST_TYPES = [
+  { value: "info", label: "お知らせ", icon: "📢" },
+  { value: "event", label: "イベント", icon: "🎉" },
+  { value: "mcs", label: "MCS / Minecraft", icon: "🎮" },
+  { value: "live", label: "配信", icon: "🔴" },
+  { value: "youtube", label: "YouTube", icon: "▶️" },
+  { value: "maintenance", label: "メンテナンス", icon: "🔧" },
+  { value: "important", label: "重要なお知らせ", icon: "🚨" },
+  { value: "community", label: "コミュニティ", icon: "💬" },
+] as const

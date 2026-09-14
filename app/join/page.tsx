@@ -20,6 +20,7 @@ function JoinContent() {
         </Link>
 
         <div className="mt-6 mb-10">
+<<<<<<< Updated upstream
           <p className="section-kicker">JOIN IRYIASERVER</p>
           <h1 className="text-4xl md:text-5xl font-bold">
             Minecraft参加方法
@@ -27,6 +28,11 @@ function JoinContent() {
           <p className="text-gray-400 mt-4">
             配信を見ながら、このページの手順で参加できます。
           </p>
+=======
+          <p className="section-kicker">MCS / JOIN</p>
+          <h1 className="text-4xl md:text-5xl font-bold">Minecraft参加方法</h1>
+          <p className="text-gray-400 mt-4">配信を見ながら、このページの手順で参加できます。</p>
+>>>>>>> Stashed changes
         </div>
 
         {STREAM_CONFIG.live && STREAM_CONFIG.participationEnabled && (
@@ -150,6 +156,7 @@ function JoinContent() {
   )
 }
 
+<<<<<<< Updated upstream
 function JoinLoading() {
   return (
     <div className="portal-bg min-h-screen text-white">
@@ -170,4 +177,10 @@ export default function JoinPage() {
       <JoinContent />
     </Suspense>
   )
+=======
+function JoinLoading() { return <div className="portal-bg min-h-screen text-white"><main className="max-w-5xl mx-auto px-5 py-14 text-gray-400">読み込み中…</main></div> }
+
+export default function JoinPage() {
+  return <Suspense fallback={<JoinLoading />}><JoinContent /></Suspense>
+>>>>>>> Stashed changes
 }

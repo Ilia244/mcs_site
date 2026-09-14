@@ -1,5 +1,2 @@
-import { redirect } from "next/navigation"
-
-export default function MinecraftPage() {
-  redirect("/join")
-}
+import Link from "next/link";import {SITE_CONFIG} from "@/lib/site-config"
+export default function MinecraftPage(){return <div className="portal-bg min-h-screen text-white"><main className="max-w-6xl mx-auto px-5 py-14"><Link href="/" className="text-cyan-300 text-sm">← ホームへ戻る</Link><div className="mt-6 mb-12"><p className="section-kicker">MCS</p><h1 className="text-4xl md:text-6xl font-bold">Minecraft / MCS</h1><p className="text-gray-400 mt-4 max-w-2xl">MCSはIlia./衣李亜のMinecraft関連サービス・コミュニティをまとめるブランドです。Server、Community、Eventなど、用途に合わせて展開します。</p></div><div className="grid md:grid-cols-3 gap-4">{SITE_CONFIG.servers.map(s=><Link key={s.id} href={`/join?server=${s.id}`} className="portal-card block-hover"><div className="text-cyan-300 text-xs tracking-widest">{s.name}</div><h2 className="text-2xl font-bold mt-2">{s.label}</h2><p className="text-gray-400 mt-2">{s.description}</p></Link>)}</div><div className="grid md:grid-cols-4 gap-4 mt-8"><Link href="/join" className="portal-card">🎮<b className="block mt-2">参加する</b></Link><Link href="/rules" className="portal-card">📜<b className="block mt-2">ルール</b></Link><Link href="/events" className="portal-card">🎉<b className="block mt-2">イベント</b></Link><Link href="/map" className="portal-card">🗺️<b className="block mt-2">Dynmap</b></Link></div></main></div>}

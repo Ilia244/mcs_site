@@ -1,22 +1,3 @@
-import Link from "next/link"
-import { SITE_CONFIG, STREAM_CONFIG } from "@/lib/site-config"
-
-export default function YouTubePage() {
-  return (
-    <div className="portal-bg min-h-screen text-white">
-      <main className="relative z-10 max-w-5xl mx-auto px-5 py-14">
-        <Link href="/" className="text-cyan-300 text-sm">← ホームへ戻る</Link>
-        <div className="mt-6 mb-10"><p className="section-kicker">YOUTUBE</p><h1 className="text-4xl md:text-5xl font-bold">YouTube配信</h1><p className="text-gray-400 mt-4">参加型配信やMinecraftの動画はこちら。</p></div>
-        <section className={`live-card ${STREAM_CONFIG.live ? "live-card-active" : ""}`}>
-          <div><p className="text-xs text-gray-400">{STREAM_CONFIG.live ? "🔴 LIVE NOW" : "CHANNEL"}</p><h2 className="text-2xl font-bold mt-1">{STREAM_CONFIG.live ? STREAM_CONFIG.title : "IRyiaのYouTubeチャンネル"}</h2></div>
-          <a href={STREAM_CONFIG.youtubeUrl} target="_blank" rel="noreferrer" className="portal-btn portal-btn-primary">▶ YouTubeを見る</a>
-        </section>
-        <section className="portal-panel mt-5">
-          <h2 className="text-2xl font-bold">参加型配信について</h2>
-          <p className="text-gray-400 mt-3 leading-relaxed">配信中はトップページと参加ページに参加型の状態を表示します。参加条件や接続方法は「参加する」から確認してください。</p>
-          <Link href="/join" className="portal-btn portal-btn-green mt-6 inline-flex">🎮 参加方法</Link>
-        </section>
-      </main>
-    </div>
-  )
-}
+"use client"
+import {useEffect,useState} from "react";import Link from "next/link";import {supabase} from "@/lib/supabase";import LiveCarousel from "@/components/LiveCarousel"
+export default function YouTubePage(){const[live,setLive]=useState<any[]>([]);const[videos,setVideos]=useState<any[]>([]);const[ch,setCh]=useState<any[]>([]);useEffect(()=>{const load=async()=>{const{data:l}=await supabase.from("youtube_items").select("id,video_id,title,channel_name,channel_role,thumbnail_url,viewer_count,started_at").eq("kind","live").eq("is_live",true).order("started_at",{ascending:false});const{data:v}=await supabase.from("youtube_items").select("id,video_id,title,channel_name,channel_role,thumbnail_url,published_at").eq("kind","video").order("published_at",{ascending:false}).limit(12);const{data:c}=await supabase.from("youtube_channels").select("id,display_name,handle,channel_url,channel_role,avatar_url,description").eq("enabled",true).order("sort_order");setLive(l||[]);setVideos(v||[]);setCh(c||[])};load();const t=setInterval(load,60000);return()=>clearInterval(t)},[]);return <div className="portal-bg min-h-screen text-white"><main className="max-w-6xl mx-auto px-5 py-14"><Link href="/" className="text-cyan-300 text-sm">← ホームへ戻る</Link><div className="mt-6 mb-12"><p className="section-kicker">YOUTUBE</p><h1 className="text-4xl md:text-5xl font-bold">YouTube</h1><p className="text-gray-400 mt-3">Ilia./衣李亜とスタッフ・コミュニティの動画・配信。</p></div>{live.length>0&&<LiveCarousel items={live}/>}<section className="mt-16"><div className="section-heading"><div><p className="section-kicker">CHANNELS</p><h2>連携チャンネル</h2></div></div><div className="grid md:grid-cols-3 gap-4">{ch.map(c=><a key={c.id} href={c.channel_url} target="_blank" rel="noreferrer" className="portal-card"><div className="flex items-center gap-3">{c.avatar_url?<img src={c.avatar_url} className="w-12 h-12 rounded-full" alt=""/>:<div className="w-12 h-12 rounded-full bg-white/10 flex items-center justify-center">▶</div>}<div><b>{c.display_name}</b><p className="text-xs text-gray-500">{c.channel_role==='owner'?'オーナー':c.channel_role==='staff'?'スタッフ':'MCS / Community'}</p></div></div><p className="text-gray-400 text-sm mt-3 line-clamp-2">{c.description}</p></a>)}</div></section><section className="mt-16"><div className="section-heading"><div><p className="section-kicker">LATEST</p><h2>新着動画</h2></div></div><div className="grid md:grid-cols-3 gap-4">{videos.map(v=><a key={v.id} href={`https://www.youtube.com/watch?v=${v.video_id}`} target="_blank" rel="noreferrer" className="portal-card block-hover">{v.thumbnail_url&&<img src={v.thumbnail_url} className="w-full aspect-video object-cover rounded-xl mb-3" alt=""/>}<div className="text-xs text-red-300">▶ {v.channel_name}</div><h3 className="font-bold mt-1 line-clamp-2">{v.title}</h3><p className="text-xs text-gray-500 mt-2">{v.published_at&&new Date(v.published_at).toLocaleDateString("ja-JP")}</p></a>)}</div></section></main></div>}
