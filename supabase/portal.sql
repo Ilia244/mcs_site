@@ -28,11 +28,37 @@ drop policy if exists "admin manage tags" on public.tags;
 create policy "admin manage tags" on public.tags for all to authenticated using ((select role from public.profiles where id=auth.uid()) in ('owner','admin')) with check ((select role from public.profiles where id=auth.uid()) in ('owner','admin'));
 
 create table if not exists public.posts (
- id uuid primary key default gen_random_uuid(), title text not null, content text not null, type text not null default 'info', status text not null default 'draft', source text not null default 'manual', priority text not null default 'normal', link_url text, thumbnail_url text, youtube_item_id text unique, legacy_news_id text unique, published_at timestamptz, created_at timestamptz not null default now(), updated_at timestamptz not null default now()
+ id uuid primary key default gen_random_uuid(), title text not null, content text not null, type text not null default 'info', status text not null default 'draft', source text not null default 'manual', priority text not null default 'normal', link_url text, thumbnail_url text, youtube_item_id text unique, legacy_news_id uuid, published_at timestamptz, created_at timestamptz not null default now(), updated_at timestamptz not null default now()
 );
 
 -- Keep compatibility when this SQL is applied to an already-created posts table.
-alter table public.posts add column if not exists legacy_news_id text unique;
+alter table public.posts add column if not exists legacy_news_id uuid;
+
+-- If an older schema created legacy_news_id as text, convert it to UUID before
+-- any comparison with news.id (which is UUID). Invalid old values become NULL.
+do $$
+begin
+  if exists (
+    select 1
+    from information_schema.columns
+    where table_schema='public'
+      and table_name='posts'
+      and column_name='legacy_news_id'
+      and data_type='text'
+  ) then
+    alter table public.posts
+      alter column legacy_news_id type uuid
+      using case
+        when legacy_news_id ~* '^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$'
+          then legacy_news_id::uuid
+        else null
+      end;
+  end if;
+end $$;
+
+create unique index if not exists posts_legacy_news_id_key
+  on public.posts(legacy_news_id)
+  where legacy_news_id is not null;
 alter table public.posts enable row level security;
 drop policy if exists "public read published posts" on public.posts;
 create policy "public read published posts" on public.posts for select using (status='published');
@@ -117,8 +143,8 @@ on conflict(name) do nothing;
 
 -- Existing legacy news is copied once into the new post system.
 insert into public.posts(title,content,type,status,source,legacy_news_id,created_at,updated_at,published_at)
-select n.title,n.content,'info',case when n.is_published then 'published' else 'draft' end,'legacy_news',n.id::text,n.created_at,n.created_at,case when n.is_published then n.created_at else null end from public.news n
-where not exists(select 1 from public.posts p where p.legacy_news_id=n.id::text);
+select n.title,n.content,'info',case when n.is_published then 'published' else 'draft' end,'legacy_news',n.id,n.created_at,n.created_at,case when n.is_published then n.created_at else null end from public.news n
+where not exists(select 1 from public.posts p where p.legacy_news_id=n.id);
 
 insert into public.site_settings(key,value) values
  ('portal_brand','Ilia./衣李亜'),('portal_subtitle','Official Portal'),('stream_participation_enabled','true') on conflict(key) do nothing;
