@@ -4,8 +4,14 @@ import { createClient } from "@supabase/supabase-js"
 export const runtime = "nodejs"
 export const maxDuration = 30
 
-const withTimeout = async <T>(promise: Promise<T>, ms = 10000): Promise<T> =>
-  Promise.race([promise, new Promise<T>((_, reject) => setTimeout(() => reject(new Error("Supabaseへの接続がタイムアウトしました")), ms))])
+const withTimeout = <T>(promise: PromiseLike<T>, ms = 10000, message = "処理がタイムアウトしました"): Promise<T> =>
+  new Promise<T>((resolve, reject) => {
+    const timer = setTimeout(() => reject(new Error(message)), ms)
+    Promise.resolve(promise).then(
+      (value) => { clearTimeout(timer); resolve(value) },
+      (error) => { clearTimeout(timer); reject(error) },
+    )
+  })
 
 const admin = () => createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
