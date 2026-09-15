@@ -2,6 +2,10 @@ import { NextRequest, NextResponse } from "next/server"
 import { createClient } from "@supabase/supabase-js"
 
 export const runtime = "nodejs"
+export const maxDuration = 60
+
+const withTimeout = async <T>(promise: Promise<T>, ms = 10000): Promise<T> =>
+  Promise.race([promise, new Promise<T>((_, reject) => setTimeout(() => reject(new Error("処理がタイムアウトしました")), ms))])
 
 const admin = () => createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -19,16 +23,16 @@ async function authorized(req: NextRequest) {
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     { auth: { autoRefreshToken: false, persistSession: false } },
   )
-  const { data: { user }, error } = await client.auth.getUser(token)
+  const { data: { user }, error } = await withTimeout(client.auth.getUser(token), 8000)
   if (error || !user) return false
-  const { data: profile, error: profileError } = await admin()
-    .from("profiles").select("role,is_admin").eq("id", user.id).maybeSingle()
+  const { data: profile, error: profileError } = await withTimeout(admin()
+    .from("profiles").select("role,is_admin").eq("id", user.id).maybeSingle(), 8000)
   if (profileError) throw new Error(`プロフィール確認失敗: ${profileError.message}`)
   return profile?.role === "owner" || profile?.role === "admin" || profile?.is_admin === true
 }
 
 async function youtubeJson(url: URL) {
-  const response = await fetch(url, { cache: "no-store" })
+  const response = await fetch(url, { cache: "no-store", signal: AbortSignal.timeout(10000) })
   const json: any = await response.json().catch(() => ({}))
   if (!response.ok) {
     const reason = json?.error?.errors?.[0]?.reason || json?.error?.message || `HTTP ${response.status}`
@@ -47,7 +51,7 @@ async function sync(req: NextRequest) {
     if (!process.env.YOUTUBE_API_KEY) return NextResponse.json({ error: "YOUTUBE_API_KEY is not configured" }, { status: 500 })
 
     const db = admin()
-    const { data: channels, error: channelError } = await db.from("youtube_channels").select("*").eq("enabled", true)
+    const { data: channels, error: channelError } = await withTimeout(db.from("youtube_channels").select("*").eq("enabled", true), 10000)
     if (channelError) return NextResponse.json({ error: `チャンネル取得失敗: ${channelError.message}` }, { status: 500 })
 
     let synced = 0

@@ -2,6 +2,10 @@ import { NextRequest, NextResponse } from "next/server"
 import { createClient } from "@supabase/supabase-js"
 
 export const runtime = "nodejs"
+export const maxDuration = 30
+
+const withTimeout = async <T>(promise: Promise<T>, ms = 10000): Promise<T> =>
+  Promise.race([promise, new Promise<T>((_, reject) => setTimeout(() => reject(new Error("Supabaseへの接続がタイムアウトしました")), ms))])
 
 const admin = () => createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -18,10 +22,10 @@ async function authorize(req: NextRequest) {
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     { auth: { autoRefreshToken: false, persistSession: false } },
   )
-  const { data: { user }, error } = await client.auth.getUser(token)
+  const { data: { user }, error } = await withTimeout(client.auth.getUser(token), 8000)
   if (error || !user) return null
-  const { data: profile, error: profileError } = await admin()
-    .from("profiles").select("role,is_admin").eq("id", user.id).maybeSingle()
+  const { data: profile, error: profileError } = await withTimeout(admin()
+    .from("profiles").select("role,is_admin").eq("id", user.id).maybeSingle(), 8000)
   if (profileError) throw new Error(profileError.message)
   if (profile?.role !== "owner" && profile?.role !== "admin" && !profile?.is_admin) return null
   return user
@@ -56,7 +60,7 @@ export async function POST(req: NextRequest) {
     if (!await authorize(req)) return NextResponse.json({ error: "unauthorized" }, { status: 401 })
     const payload = cleanChannel(await req.json())
     if (!payload.display_name) return NextResponse.json({ error: "表示名を入力してください" }, { status: 400 })
-    const { data, error } = await admin().from("youtube_channels").insert(payload).select("*").single()
+    const { data, error } = await withTimeout(admin().from("youtube_channels").insert(payload).select("*").single(), 10000)
     if (error) return NextResponse.json({ error: error.message }, { status: 500 })
     return NextResponse.json({ ok: true, channel: data })
   } catch (e: any) { return NextResponse.json({ error: e?.message || "server error" }, { status: 500 }) }
@@ -70,7 +74,7 @@ export async function PUT(req: NextRequest) {
     if (!body.id) return NextResponse.json({ error: "チャンネルIDがありません" }, { status: 400 })
     const payload = cleanChannel(body)
     if (!payload.display_name) return NextResponse.json({ error: "表示名を入力してください" }, { status: 400 })
-    const { data, error } = await admin().from("youtube_channels").update(payload).eq("id", body.id).select("*").single()
+    const { data, error } = await withTimeout(admin().from("youtube_channels").update(payload).eq("id", body.id).select("*").single(), 10000)
     if (error) return NextResponse.json({ error: error.message }, { status: 500 })
     return NextResponse.json({ ok: true, channel: data })
   } catch (e: any) { return NextResponse.json({ error: e?.message || "server error" }, { status: 500 }) }
