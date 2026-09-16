@@ -131,7 +131,7 @@ async function sync(req: NextRequest) {
                 youtube_item_id: vid,
                 link_url: `https://www.youtube.com/watch?v=${vid}`,
                 thumbnail_url: row.thumbnail_url,
-                published_at: ch.auto_post_mode === "draft" ? null : new Date().toISOString(),
+                published_at: ch.auto_post_mode === "draft" ? null : (item.snippet.publishedAt || new Date().toISOString()),
               }).select("id").single()
               if (postError) throw new Error(`自動投稿作成失敗: ${postError.message}`)
               if (post && ch.auto_notify && ch.auto_post_mode !== "draft") {
