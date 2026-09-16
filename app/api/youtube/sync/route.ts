@@ -141,9 +141,31 @@ async function sync(req: NextRequest) {
                   link_url: `/news/${post.id}`,
                 }).select("id").single()
                 if (notificationError) throw new Error(`自動通知作成失敗: ${notificationError.message}`)
+<<<<<<< HEAD
                 if (notification?.id) {
                   try { await sendPushForNotification(notification.id) } catch (pushError) { console.error("YouTube Web Push送信失敗:", pushError) }
                 }
+=======
+<<<<<<< HEAD
+                if (notification?.id) {
+                  try { await sendPushForNotification(notification.id) } catch (pushError) { console.error("YouTube Web Push送信失敗:", pushError) }
+                }
+=======
+<<<<<<< HEAD
+                if (notification) {
+                  try { await sendPushForNotification(notification.id) } catch (pushError) { console.error("YouTube Web Push送信失敗:", pushError) }
+                }
+=======
+<<<<<<< HEAD
+                if (notification) {
+                  try { await sendPushForNotification(notification.id) } catch (pushError) { console.error("YouTube Web Push送信失敗:", pushError) }
+                }
+=======
+              try { await sendPushForNotification(notification.id) } catch (pushError) { console.error("YouTube Web Push送信失敗:", pushError) }
+>>>>>>> 608194c73a09918f348c435f07428f7b651f32e2
+>>>>>>> da69616a1c261ecc4215d70015da33c871e1f9ff
+>>>>>>> 17dbb73c499708d87cb9d22cd971361f266916c2
+>>>>>>> 51fc11e9f2ac5f6f07aec935f7e98c168900453e
               }
             }
           }
