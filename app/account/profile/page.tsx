@@ -179,8 +179,6 @@ export default function Profile() {
         <PushNotificationSettings />
         {errorMessage && <div className="w-full text-center text-red-400 text-sm">{errorMessage}</div>}
 
-        <PushNotificationSettings />
-
         <div className="w-full flex flex-col gap-3">
           <input
             type="text"
