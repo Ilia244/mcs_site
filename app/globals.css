@@ -21,7 +21,20 @@ h1,h2,h3 { font-family:var(--font-geist-sans); }
 .portal-menu > a,.portal-menu > button { padding:8px 10px; border-radius:8px; color:#e2e8f0; }
 .portal-menu > a:hover,.portal-menu > button:hover { background:rgba(255,255,255,.06); }
 /* Notification popover is isolated from generic .portal-menu button rules. */
-.notification-popover { gap: 0; }
+.notification-popover {
+  gap: 0;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(34, 211, 238, .42) transparent;
+}
+.notification-popover::-webkit-scrollbar { width: 6px; }
+.notification-popover::-webkit-scrollbar-track { background: transparent; }
+.notification-popover::-webkit-scrollbar-thumb {
+  background: rgba(34, 211, 238, .42);
+  border-radius: 999px;
+}
+.notification-popover::-webkit-scrollbar-thumb:hover {
+  background: rgba(34, 211, 238, .65);
+}
 .notification-popover-header { flex: 0 0 auto; }
 .notification-items { display:flex; flex-direction:column; gap:6px; min-width:0; }
 .notification-popover-item { display:block !important; flex:0 0 auto; margin:0; border:0; background:transparent; color:#e2e8f0; box-sizing:border-box; }
