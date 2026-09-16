@@ -156,3 +156,29 @@ returns boolean language sql stable security invoker as $$
 $$;
 revoke all on function public.is_portal_admin() from public;
 grant execute on function public.is_portal_admin() to authenticated;
+
+
+-- Web Push subscriptions. The endpoint is unique per browser/device subscription.
+create table if not exists public.push_subscriptions (
+ id uuid primary key default gen_random_uuid(),
+ user_id uuid not null references auth.users(id) on delete cascade,
+ endpoint text unique not null,
+ p256dh text not null,
+ auth text not null,
+ created_at timestamptz not null default now(),
+ updated_at timestamptz not null default now()
+);
+alter table public.push_subscriptions enable row level security;
+drop policy if exists "users read own push subscriptions" on public.push_subscriptions;
+create policy "users read own push subscriptions" on public.push_subscriptions
+  for select to authenticated using (user_id=auth.uid());
+drop policy if exists "users insert own push subscriptions" on public.push_subscriptions;
+create policy "users insert own push subscriptions" on public.push_subscriptions
+  for insert to authenticated with check (user_id=auth.uid());
+drop policy if exists "users update own push subscriptions" on public.push_subscriptions;
+create policy "users update own push subscriptions" on public.push_subscriptions
+  for update to authenticated using (user_id=auth.uid()) with check (user_id=auth.uid());
+drop policy if exists "users delete own push subscriptions" on public.push_subscriptions;
+create policy "users delete own push subscriptions" on public.push_subscriptions
+  for delete to authenticated using (user_id=auth.uid());
+create index if not exists push_subscriptions_user_id_idx on public.push_subscriptions(user_id);
