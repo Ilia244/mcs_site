@@ -144,6 +144,19 @@ async function sync(req: NextRequest) {
                 if (notification?.id) {
                   try { await sendPushForNotification(notification.id) } catch (pushError) { console.error("YouTube Web Push送信失敗:", pushError) }
                 }
+                if (notification?.id) {
+                  try { await sendPushForNotification(notification.id) } catch (pushError) { console.error("YouTube Web Push送信失敗:", pushError) }
+                }
+                if (notification?.id) {
+                  try { await sendPushForNotification(notification.id) } catch (pushError) { console.error("YouTube Web Push送信失敗:", pushError) }
+                }
+                if (notification) {
+                  try { await sendPushForNotification(notification.id) } catch (pushError) { console.error("YouTube Web Push送信失敗:", pushError) }
+                }
+                if (notification) {
+                  try { await sendPushForNotification(notification.id) } catch (pushError) { console.error("YouTube Web Push送信失敗:", pushError) }
+                }
+              try { await sendPushForNotification(notification.id) } catch (pushError) { console.error("YouTube Web Push送信失敗:", pushError) }
               }
             }
           }
