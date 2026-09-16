@@ -153,7 +153,7 @@ export default function PushNotificationSettings({ compact = false }: Props) {
 
   if (compact) {
     return (
-      <div className="border-b border-white/10 pb-2 mb-2">
+      <div className="push-settings-compact border-b border-white/10 pb-2 mb-2">
         <button
           type="button"
           onClick={() => setSettingsOpen(value => !value)}
