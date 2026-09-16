@@ -1,8 +1,8 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { supabase } from "@/lib/supabase"
 import { useAuth } from "@/app/providers/AuthProvider"
+import { DEFAULT_NOTIFICATION_PREFERENCES, NOTIFICATION_TYPES, NotificationTypeKey } from "@/lib/notification-settings"
 
 function urlBase64ToUint8Array(base64String: string) {
   const padding = "=".repeat((4 - (base64String.length % 4)) % 4)
@@ -11,13 +11,27 @@ function urlBase64ToUint8Array(base64String: string) {
   return Uint8Array.from([...rawData].map(char => char.charCodeAt(0)))
 }
 
-export default function PushNotificationSettings() {
+type Props = { compact?: boolean }
+
+export default function PushNotificationSettings({ compact = false }: Props) {
   const { user, accessToken } = useAuth()
   const [supported, setSupported] = useState(false)
   const [permission, setPermission] = useState<NotificationPermission | "unsupported">("default")
   const [enabled, setEnabled] = useState(false)
   const [busy, setBusy] = useState(false)
+  const [savingPrefs, setSavingPrefs] = useState(false)
   const [message, setMessage] = useState("")
+  const [preferences, setPreferences] = useState(DEFAULT_NOTIFICATION_PREFERENCES)
+
+  const loadPreferences = async () => {
+    if (!accessToken) return
+    try {
+      const r = await fetch("/api/push/preferences", { headers: { Authorization: `Bearer ${accessToken}` }, cache: "no-store" })
+      if (!r.ok) return
+      const j = await r.json()
+      if (j.preferences) setPreferences({ ...DEFAULT_NOTIFICATION_PREFERENCES, ...j.preferences })
+    } catch (e) { console.error(e) }
+  }
 
   useEffect(() => {
     const ok = typeof window !== "undefined" && "Notification" in window && "serviceWorker" in navigator && "PushManager" in window
@@ -26,32 +40,19 @@ export default function PushNotificationSettings() {
   }, [])
 
   useEffect(() => {
-    if (!supported || !user) {
-      setEnabled(false)
-      return
-    }
-    void navigator.serviceWorker.ready.then(reg => reg.pushManager.getSubscription()).then(sub => {
-      setEnabled(!!sub)
-    })
-  }, [supported, user])
+    if (!supported || !user) { setEnabled(false); return }
+    void navigator.serviceWorker.register("/sw.js", { scope: "/" }).catch(() => {})
+    void navigator.serviceWorker.ready.then(reg => reg.pushManager.getSubscription()).then(sub => setEnabled(!!sub))
+    void loadPreferences()
+  }, [supported, user, accessToken])
 
   const enable = async () => {
-    if (!user || !accessToken) {
-      setMessage("通知を利用するにはログインしてください。")
-      return
-    }
-    if (!supported) {
-      setMessage("このブラウザはWeb Push通知に対応していません。")
-      return
-    }
+    if (!user || !accessToken) { setMessage("通知を利用するにはログインしてください。"); return }
+    if (!supported) { setMessage("このブラウザはWeb Push通知に対応していません。"); return }
     const publicKey = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY
-    if (!publicKey) {
-      setMessage("サイト側のWeb Push設定が未完了です。管理者に確認してください。")
-      return
-    }
+    if (!publicKey) { setMessage("サイト側のWeb Push設定が未完了です。管理者に確認してください。"); return }
 
-    setBusy(true)
-    setMessage("")
+    setBusy(true); setMessage("")
     try {
       const nextPermission = await Notification.requestPermission()
       setPermission(nextPermission)
@@ -59,14 +60,12 @@ export default function PushNotificationSettings() {
         setMessage(nextPermission === "denied" ? "通知がブラウザで拒否されています。" : "通知は許可されませんでした。")
         return
       }
-
       const registration = await navigator.serviceWorker.register("/sw.js", { scope: "/" })
-      await navigator.serviceWorker.ready
-      const subscription = await registration.pushManager.subscribe({
+      const existing = await registration.pushManager.getSubscription()
+      const subscription = existing || await registration.pushManager.subscribe({
         userVisibleOnly: true,
         applicationServerKey: urlBase64ToUint8Array(publicKey),
       })
-
       const r = await fetch("/api/push/subscribe", {
         method: "POST",
         headers: { "Content-Type": "application/json", Authorization: `Bearer ${accessToken}` },
@@ -74,21 +73,16 @@ export default function PushNotificationSettings() {
       })
       const j = await r.json().catch(() => ({}))
       if (!r.ok) throw new Error(j.error || "購読情報の保存に失敗しました。")
-
       setEnabled(true)
       setMessage("通知を有効にしました。")
     } catch (e: any) {
-      console.error(e)
-      setMessage(e?.message || "通知の有効化に失敗しました。")
-    } finally {
-      setBusy(false)
-    }
+      console.error(e); setMessage(e?.message || "通知の有効化に失敗しました。")
+    } finally { setBusy(false) }
   }
 
   const disable = async () => {
     if (!accessToken) return
-    setBusy(true)
-    setMessage("")
+    setBusy(true); setMessage("")
     try {
       const registration = await navigator.serviceWorker.ready
       const subscription = await registration.pushManager.getSubscription()
@@ -100,34 +94,69 @@ export default function PushNotificationSettings() {
         })
         await subscription.unsubscribe()
       }
-      setEnabled(false)
-      setMessage("この端末のサイト通知を解除しました。")
-    } catch (e: any) {
-      setMessage(e?.message || "通知解除に失敗しました。")
-    } finally {
-      setBusy(false)
-    }
+      setEnabled(false); setMessage("この端末のサイト通知を解除しました。")
+    } catch (e: any) { setMessage(e?.message || "通知解除に失敗しました。") }
+    finally { setBusy(false) }
+  }
+
+  const savePreferences = async (next: typeof preferences) => {
+    if (!accessToken) return
+    setPreferences(next); setSavingPrefs(true); setMessage("")
+    try {
+      const r = await fetch("/api/push/preferences", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${accessToken}` },
+        body: JSON.stringify({ preferences: next }),
+      })
+      const j = await r.json().catch(() => ({}))
+      if (!r.ok) throw new Error(j.error || "通知設定の保存に失敗しました。")
+      setMessage("通知の種類を保存しました。")
+    } catch (e: any) { setMessage(e?.message || "通知設定の保存に失敗しました。") }
+    finally { setSavingPrefs(false) }
   }
 
   if (!user) return null
 
   return (
-    <section className="w-full rounded-2xl border border-white/10 bg-black/20 p-5">
-      <div className="flex items-start justify-between gap-4 flex-wrap">
+    <div className={compact ? "border-t border-white/10 mt-2 pt-2" : "w-full rounded-2xl border border-white/10 bg-black/20 p-5"}>
+      <div className="flex items-start justify-between gap-3 flex-wrap">
         <div>
-          <h2 className="font-bold text-lg">🔔 サイト通知</h2>
-          <p className="text-sm text-gray-400 mt-1">新着動画・LIVE・重要なお知らせを端末の通知として受け取ります。</p>
+          <h2 className={compact ? "font-semibold text-sm" : "font-bold text-lg"}>🔔 プッシュ通知</h2>
+          {!compact && <p className="text-sm text-gray-400 mt-1">新着動画・LIVE・お知らせを端末の通知として受け取ります。</p>}
         </div>
         {supported && permission !== "denied" && (
           <button type="button" disabled={busy} onClick={enabled ? disable : enable}
-            className="px-4 py-2 rounded-xl bg-white/10 border border-white/15 hover:bg-white/15 disabled:opacity-50">
-            {busy ? "処理中…" : enabled ? "通知をOFF" : "通知を許可"}
+            className="px-3 py-2 rounded-xl bg-white/10 border border-white/15 hover:bg-white/15 disabled:opacity-50 text-xs font-semibold">
+            {busy ? "処理中…" : enabled ? "通知をOFF" : "通知をON"}
           </button>
         )}
       </div>
-      {!supported && <p className="text-sm text-amber-300 mt-3">このブラウザではWeb Push通知を利用できません。</p>}
-      {permission === "denied" && <p className="text-sm text-amber-300 mt-3">ブラウザ側で通知が拒否されています。ブラウザのサイト設定から通知を許可してください。</p>}
-      {message && <p className="text-sm text-cyan-300 mt-3 break-words">{message}</p>}
-    </section>
+      {!supported && <p className="text-xs text-amber-300 mt-2">このブラウザではWeb Push通知を利用できません。</p>}
+      {permission === "denied" && <p className="text-xs text-amber-300 mt-2">ブラウザ側で通知が拒否されています。ブラウザのサイト設定から通知を許可してください。</p>}
+
+      {supported && enabled && (
+        <div className="mt-3 rounded-xl bg-black/20 border border-white/10 p-3">
+          <div className="flex items-center justify-between gap-2 mb-2">
+            <div className="text-xs font-bold">通知する種類</div>
+            <button type="button" disabled={savingPrefs} onClick={() => {
+              const next = { ...preferences } as typeof preferences
+              for (const type of NOTIFICATION_TYPES) next[type.key] = true
+              void savePreferences(next)
+            }} className="text-[11px] text-cyan-300 disabled:opacity-50">すべてON</button>
+          </div>
+          <div className="space-y-1">
+            {NOTIFICATION_TYPES.map((type) => {
+              const key = type.key as NotificationTypeKey
+              return <label key={key} className="flex items-center justify-between gap-3 py-1.5 cursor-pointer">
+                <span className="min-w-0"><span className="text-xs block">{type.label}</span><span className="text-[10px] text-gray-500">{type.description}</span></span>
+                <input type="checkbox" checked={preferences[key]} disabled={savingPrefs}
+                  onChange={e => void savePreferences({ ...preferences, [key]: e.target.checked })} />
+              </label>
+            })}
+          </div>
+        </div>
+      )}
+      {message && <p className="text-xs text-cyan-300 mt-2 break-words">{message}</p>}
+    </div>
   )
 }

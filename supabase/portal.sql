@@ -182,3 +182,33 @@ drop policy if exists "users delete own push subscriptions" on public.push_subsc
 create policy "users delete own push subscriptions" on public.push_subscriptions
   for delete to authenticated using (user_id=auth.uid());
 create index if not exists push_subscriptions_user_id_idx on public.push_subscriptions(user_id);
+
+-- Per-user Web Push notification type preferences.
+create table if not exists public.notification_preferences (
+  user_id uuid not null references auth.users(id) on delete cascade,
+  category text not null,
+  enabled boolean not null default true,
+  updated_at timestamptz not null default now(),
+  primary key(user_id, category)
+);
+alter table public.notification_preferences enable row level security;
+drop policy if exists "users manage own notification preferences" on public.notification_preferences;
+create policy "users manage own notification preferences" on public.notification_preferences
+  for all to authenticated using (user_id=auth.uid()) with check (user_id=auth.uid());
+
+-- Deleting an announcement also removes its notification and read-state rows.
+do $$
+begin
+  if exists (
+    select 1 from information_schema.table_constraints
+    where constraint_schema='public'
+      and table_name='notifications'
+      and constraint_name='notifications_post_id_fkey'
+  ) then
+    alter table public.notifications drop constraint notifications_post_id_fkey;
+  end if;
+  alter table public.notifications
+    add constraint notifications_post_id_fkey
+    foreign key (post_id) references public.posts(id) on delete cascade;
+exception when duplicate_object then null;
+end $$;

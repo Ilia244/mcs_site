@@ -51,6 +51,18 @@ export async function sendPushForNotification(notificationId: string) {
 
   if (subscriptionError) throw new Error(`Push購読取得失敗: ${subscriptionError.message}`)
 
+  const userIds = [...new Set((subscriptions || []).map((sub: any) => sub.user_id))]
+  const enabledByUser = new Map<string, boolean>()
+  if (userIds.length) {
+    const { data: preferences, error: preferenceError } = await db
+      .from("notification_preferences")
+      .select("user_id,category,enabled")
+      .in("user_id", userIds)
+      .eq("category", notification.category)
+    if (preferenceError) throw new Error(`通知設定取得失敗: ${preferenceError.message}`)
+    for (const row of preferences || []) enabledByUser.set(row.user_id, row.enabled !== false)
+  }
+
   const payload = JSON.stringify({
     title: notification.title,
     body: notification.body || "",
@@ -64,6 +76,11 @@ export async function sendPushForNotification(notificationId: string) {
   let removed = 0
 
   for (const sub of (subscriptions || []) as PushSubscriptionRow[]) {
+    // 設定が存在しない利用者は従来どおりON扱いにする。
+    // 「test」は管理者の動作確認用なので常に送信する。
+    if (notification.category !== "test" && enabledByUser.has(sub.user_id) && enabledByUser.get(sub.user_id) === false) {
+      continue
+    }
     try {
       await webpush.sendNotification(
         {
