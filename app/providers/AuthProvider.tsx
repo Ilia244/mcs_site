@@ -22,6 +22,7 @@ export type Profile = {
 type AuthContextType = {
   user: User | null
   profile: Profile | null
+  accessToken: string | null
   loading: boolean
   profileLoading: boolean
   refreshProfile: () => Promise<void>
@@ -30,6 +31,7 @@ type AuthContextType = {
 const AuthContext = createContext<AuthContextType>({
   user: null,
   profile: null,
+  accessToken: null,
   loading: true,
   profileLoading: false,
   refreshProfile: async () => {},
@@ -46,6 +48,7 @@ export default function AuthProvider({
 }) {
   const [user, setUser] = useState<User | null>(null)
   const [profile, setProfile] = useState<Profile | null>(null)
+  const [accessToken, setAccessToken] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
   const [profileLoading, setProfileLoading] = useState(false)
 
@@ -114,10 +117,12 @@ export default function AuthProvider({
       if (error) {
         console.error("セッション取得エラー:", error)
         setUser(null)
+        setAccessToken(null)
         setProfile(null)
       } else {
         const currentUser = data.session?.user ?? null
         setUser(currentUser)
+        setAccessToken(data.session?.access_token ?? null)
         await loadProfile(currentUser)
       }
 
@@ -133,9 +138,11 @@ export default function AuthProvider({
 
       const nextUser = session?.user ?? null
       setUser(nextUser)
+      setAccessToken(session?.access_token ?? null)
 
       if (event === "SIGNED_OUT") {
         setProfile(null)
+        setAccessToken(null)
         return
       }
 
@@ -153,11 +160,12 @@ export default function AuthProvider({
     () => ({
       user,
       profile,
+      accessToken,
       loading,
       profileLoading,
       refreshProfile,
     }),
-    [user, profile, loading, profileLoading, refreshProfile],
+    [user, profile, accessToken, loading, profileLoading, refreshProfile],
   )
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
