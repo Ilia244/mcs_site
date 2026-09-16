@@ -4,6 +4,7 @@ import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
 import { supabase } from "@/lib/supabase"
 import { useAuth } from "@/app/providers/AuthProvider"
+import PushNotificationSettings from "@/components/PushNotificationSettings"
 
 export default function Profile() {
   const router = useRouter()
@@ -175,6 +176,7 @@ export default function Profile() {
         <div className="text-xs text-gray-400 break-all text-center">{user.email}</div>
 
         {message && <div className="w-full text-center text-green-400 text-sm">{message}</div>}
+        <PushNotificationSettings />
         {errorMessage && <div className="w-full text-center text-red-400 text-sm">{errorMessage}</div>}
 
         <div className="w-full flex flex-col gap-3">
