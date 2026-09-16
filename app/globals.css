@@ -100,3 +100,42 @@ h1,h2,h3 { font-family:var(--font-geist-sans); }
 .news-item h2, .notification-item h2 { line-height:1.45; font-weight:800; font-family:var(--font-geist-sans); }
 .news-item p, .notification-item p { line-height:1.75; }
 .notification-meta { display:flex; align-items:center; gap:6px; flex-wrap:wrap; line-height:1.5; }
+
+/* Notification popover: keep the panel fully inside the viewport on phones. */
+@media (max-width: 640px) {
+  .notification-popover {
+    position: fixed !important;
+    top: calc(env(safe-area-inset-top, 0px) + 58px);
+    right: 12px !important;
+    left: 12px !important;
+    width: auto !important;
+    max-width: none !important;
+    max-height: calc(100dvh - env(safe-area-inset-top, 0px) - 70px) !important;
+    overflow-x: hidden;
+    overflow-y: auto;
+    border-radius: 14px;
+  }
+
+  .notification-popover-header {
+    position: sticky;
+    top: 0;
+    z-index: 2;
+    background: #0b111a;
+    border-bottom: 1px solid rgba(255,255,255,.08);
+  }
+
+  .notification-popover-item {
+    width: 100% !important;
+    max-width: 100% !important;
+  }
+
+  .notification-popover .push-settings-compact,
+  .notification-popover .push-settings-compact > button,
+  .notification-popover .push-settings-compact > div {
+    max-width: 100%;
+  }
+
+  .notification-popover .push-settings-compact > div.rounded-xl {
+    overflow: hidden;
+  }
+}
