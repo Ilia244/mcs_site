@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server"
 import { createClient } from "@supabase/supabase-js"
+import { sendPushForNotification } from "@/lib/push-server"
 
 export const runtime = "nodejs"
 export const maxDuration = 60
@@ -134,12 +135,31 @@ async function sync(req: NextRequest) {
               }).select("id").single()
               if (postError) throw new Error(`自動投稿作成失敗: ${postError.message}`)
               if (post && ch.auto_notify && ch.auto_post_mode !== "draft") {
-                const { error: notificationError } = await db.from("notifications").insert({
+                const { data: notification, error: notificationError } = await db.from("notifications").insert({
                   post_id: post.id, category: "youtube", priority: "normal",
                   title: `${ch.display_name}：新しい動画が公開されました`, body: item.snippet.title,
                   link_url: `/news/${post.id}`,
-                })
+                }).select("id").single()
                 if (notificationError) throw new Error(`自動通知作成失敗: ${notificationError.message}`)
+<<<<<<< HEAD
+                if (notification?.id) {
+                  try { await sendPushForNotification(notification.id) } catch (pushError) { console.error("YouTube Web Push送信失敗:", pushError) }
+                }
+=======
+<<<<<<< HEAD
+                if (notification) {
+                  try { await sendPushForNotification(notification.id) } catch (pushError) { console.error("YouTube Web Push送信失敗:", pushError) }
+                }
+=======
+<<<<<<< HEAD
+                if (notification) {
+                  try { await sendPushForNotification(notification.id) } catch (pushError) { console.error("YouTube Web Push送信失敗:", pushError) }
+                }
+=======
+              try { await sendPushForNotification(notification.id) } catch (pushError) { console.error("YouTube Web Push送信失敗:", pushError) }
+>>>>>>> 608194c73a09918f348c435f07428f7b651f32e2
+>>>>>>> da69616a1c261ecc4215d70015da33c871e1f9ff
+>>>>>>> 17dbb73c499708d87cb9d22cd971361f266916c2
               }
             }
           }
@@ -188,11 +208,14 @@ async function sync(req: NextRequest) {
               if (error) throw new Error(`LIVE保存失敗: ${error.message}`)
             }
             if (isLive && !ex?.is_live && ch.auto_notify) {
-              const { error } = await db.from("notifications").insert({
+              const { data: liveNotification, error } = await db.from("notifications").insert({
                 category: "live", priority: "normal", title: `${ch.display_name}が配信を開始しました`,
                 body: v.snippet.title, link_url: `https://www.youtube.com/watch?v=${v.id}`,
-              })
+              }).select("id").single()
               if (error) throw new Error(`LIVE通知作成失敗: ${error.message}`)
+              if (liveNotification?.id) {
+                try { await sendPushForNotification(liveNotification.id) } catch (pushError) { console.error("LIVE Web Push送信失敗:", pushError) }
+              }
             }
           }
         }
