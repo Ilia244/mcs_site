@@ -1,7 +1,7 @@
 "use client"
 
 import Link from "next/link"
-import { useEffect, useState } from "react"
+import { Suspense, useEffect, useState } from "react"
 
 import { SITE_CONFIG, STREAM_CONFIG, DEFAULT_JOIN_SERVERS, type JoinServerConfig } from "@/lib/site-config"
 
