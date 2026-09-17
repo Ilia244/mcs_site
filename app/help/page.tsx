@@ -21,17 +21,18 @@ const adminTopics = [
 
 function Step({ n, title, children }: { n: string; title: string; children: React.ReactNode }) {
   return (
-    <div className="rounded-2xl border border-white/10 bg-black/10 p-5">
-      <div className="flex gap-4">
+    <details className="group rounded-2xl border border-white/10 bg-black/10 overflow-hidden">
+      <summary className="flex cursor-pointer list-none items-center gap-4 p-4 md:p-5 select-none hover:bg-white/[.03] transition">
         <span className="shrink-0 grid place-items-center w-9 h-9 rounded-full bg-cyan-400/10 border border-cyan-300/20 text-cyan-300 font-bold text-sm">
           {n}
         </span>
-        <div className="min-w-0">
-          <h3 className="font-bold text-lg">{title}</h3>
-          <div className="text-gray-300 text-sm leading-7 mt-2">{children}</div>
-        </div>
+        <span className="min-w-0 flex-1 font-bold text-base md:text-lg">{title}</span>
+        <span className="shrink-0 text-xs text-cyan-300/70 transition-transform group-open:rotate-180">▼</span>
+      </summary>
+      <div className="border-t border-white/10 px-4 pb-4 pt-3 md:px-5 md:pb-5 text-gray-300 text-sm leading-7">
+        {children}
       </div>
-    </div>
+    </details>
   )
 }
 
@@ -120,7 +121,7 @@ export default function HelpPage() {
             <p className="section-kicker">IMAGE GUIDE</p>
             <h3 className="text-xl font-bold mt-1">画像で見る：Java版でサーバーを追加</h3>
             <p className="text-gray-400 text-sm leading-7 mt-2">
-              実際のMinecraft Java版の画面を使って、サーバー追加から接続情報の入力までを順番に案内します。
+              実際のMinecraft Java版の画面を中心に、サーバー追加の操作を案内します。詳しい文章説明は各画像の「説明」を開いて確認できます。
             </p>
 
             <div className="space-y-6 mt-5">
@@ -157,11 +158,16 @@ export default function HelpPage() {
                       className="h-auto w-full object-contain"
                     />
                   </div>
-                  <div className="p-4 md:p-5">
-                    <p className="text-xs font-bold tracking-[0.18em] text-cyan-300">{item.step}</p>
-                    <h4 className="font-bold text-lg mt-1">{item.title}</h4>
-                    <p className="text-gray-400 text-sm leading-7 mt-2">{item.text}</p>
-                  </div>
+                  <details className="group border-t border-white/10">
+                    <summary className="flex cursor-pointer list-none items-center gap-3 p-4 md:p-5 select-none hover:bg-white/[.03] transition">
+                      <span className="text-xs font-bold tracking-[0.18em] text-cyan-300">{item.step}</span>
+                      <span className="min-w-0 flex-1 font-bold text-base md:text-lg">{item.title}</span>
+                      <span className="shrink-0 text-xs text-cyan-300/70 transition-transform group-open:rotate-180">▼ 説明</span>
+                    </summary>
+                    <div className="border-t border-white/10 px-4 pb-4 pt-3 md:px-5 md:pb-5">
+                      <p className="text-gray-400 text-sm leading-7">{item.text}</p>
+                    </div>
+                  </details>
                 </div>
               ))}
             </div>
