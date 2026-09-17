@@ -109,19 +109,13 @@ export default function HelpPage() {
             <Step n="2" title="Java版の接続情報を確認">
               「Java版で参加」の欄にあるサーバーアドレスとポートを確認します。通常のMinecraft Java版では、サーバーアドレスとポートを「アドレス:ポート」の形で入力できます。
             </Step>
-            <Step n="3" title="Minecraft Java版を開く">
-              「マルチプレイ」→「サーバーを追加」または「ダイレクト接続」を開きます。
-            </Step>
-            <Step n="4" title="接続情報を入力して参加">
-              サーバーアドレスを入力し、必要な場合はポートも指定して接続します。参加方法ページの「接続情報をコピー」を使うと入力ミスを減らせます。
-            </Step>
           </div>
 
           <div className="mt-8 rounded-2xl border border-cyan-400/15 bg-cyan-400/5 p-4 md:p-5">
             <p className="section-kicker">IMAGE GUIDE</p>
             <h3 className="text-xl font-bold mt-1">画像で見る：Java版でサーバーを追加</h3>
             <p className="text-gray-400 text-sm leading-7 mt-2">
-              実際のMinecraft Java版の画面を中心に、サーバー追加の操作を案内します。詳しい文章説明は各画像の「説明」を開いて確認できます。
+              実際のMinecraft Java版の画面を中心に、サーバー追加の操作を案内します。
             </p>
 
             <div className="space-y-6 mt-5">
@@ -158,16 +152,11 @@ export default function HelpPage() {
                       className="h-auto w-full object-contain"
                     />
                   </div>
-                  <details className="group border-t border-white/10">
-                    <summary className="flex cursor-pointer list-none items-center gap-3 p-4 md:p-5 select-none hover:bg-white/[.03] transition">
-                      <span className="text-xs font-bold tracking-[0.18em] text-cyan-300">{item.step}</span>
-                      <span className="min-w-0 flex-1 font-bold text-base md:text-lg">{item.title}</span>
-                      <span className="shrink-0 text-xs text-cyan-300/70 transition-transform group-open:rotate-180">▼ 説明</span>
-                    </summary>
-                    <div className="border-t border-white/10 px-4 pb-4 pt-3 md:px-5 md:pb-5">
-                      <p className="text-gray-400 text-sm leading-7">{item.text}</p>
-                    </div>
-                  </details>
+                  <div className="border-t border-white/10 px-4 pb-4 pt-4 md:px-5 md:pb-5">
+                    <p className="text-xs font-bold tracking-[0.18em] text-cyan-300">{item.step}</p>
+                    <p className="mt-1 font-bold text-base md:text-lg">{item.title}</p>
+                    <p className="mt-2 text-gray-400 text-sm leading-7">{item.text}</p>
+                  </div>
                 </div>
               ))}
             </div>
