@@ -53,7 +53,7 @@ export default function HelpPage() {
           <p className="section-kicker">MCS / HELP</p>
           <h1 className="text-4xl md:text-5xl font-bold">Minecraft参加・操作ヘルプ</h1>
           <p className="text-gray-400 mt-4 max-w-3xl leading-7">
-            MCSロビーへの参加方法や接続情報の見方、Bedrock版のフレンド参加、特設サーバーの接続方法などをまとめています。
+            サーバーへの参加方法や接続情報の見方、Bedrock版のフレンド参加、サーバー追加の設定などをまとめています。
             わからないことがあったときは、まずここを確認してください。
           </p>
         </header>
@@ -83,7 +83,7 @@ export default function HelpPage() {
           <p className="section-kicker">START</p>
           <h2 className="text-2xl font-bold mt-1">まずはここから</h2>
           <p className="text-gray-300 mt-4 leading-7">
-            通常は「参加方法」ページからMCSロビーへ参加します。ロビーから各サーバーへ移動できます。イベントなどの特設サーバーだけ、個別の接続方法が案内される場合があります。
+            通常は「参加方法」ページで遊びたいサーバーを選び、表示された接続情報を使ってMinecraftから接続します。
           </p>
           <div className="grid md:grid-cols-2 gap-4 mt-5">
             <Link href="/join" className="portal-card block-hover">
@@ -104,7 +104,7 @@ export default function HelpPage() {
           <h2 className="text-2xl font-bold mt-1">Java版の参加方法</h2>
           <div className="space-y-3 mt-5">
             <Step n="1" title="参加するサーバーを選択">
-              <Link href="/join" className="text-cyan-300 hover:underline">参加方法ページ</Link>を開き、遊びたいサーバーを選択します。
+              <Link href="/join" className="text-cyan-300 hover:underline">参加方法ページ</Link>を開き、通常はMCSロビーへ参加します。ロビー内から遊びたいサーバーへ移動できます。特設サーバーのみ個別の接続情報を確認してください。
             </Step>
             <Step n="2" title="Java版の接続情報を確認">
               「Java版で参加」の欄にあるサーバーアドレスとポートを確認します。通常のMinecraft Java版では、サーバーアドレスとポートを「アドレス:ポート」の形で入力できます。

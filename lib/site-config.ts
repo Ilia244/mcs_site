@@ -10,7 +10,6 @@ export type JoinServerConfig = {
   bedrockPort: string
   bedrockFriendJoin: boolean
   bedrockFriendName: string
-  /** 通常サーバーはロビー経由。special のみ個別接続先として案内します。 */
   joinMode: "lobby" | "special"
 }
 
