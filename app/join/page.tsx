@@ -1,19 +1,20 @@
 "use client"
 
 import Link from "next/link"
-import { Suspense } from "react"
+import { Suspense, useEffect, useState } from "react"
 import { useSearchParams } from "next/navigation"
 
-import { SITE_CONFIG, STREAM_CONFIG } from "@/lib/site-config"
+import { SITE_CONFIG, STREAM_CONFIG, DEFAULT_JOIN_SERVERS, type JoinServerConfig } from "@/lib/site-config"
 
 function JoinContent() {
   const params = useSearchParams()
 
-  const selected = params.get("server") ?? "survival"
+  const [servers, setServers] = useState<JoinServerConfig[]>(DEFAULT_JOIN_SERVERS)
 
-  const server =
-    SITE_CONFIG.servers.find((item) => item.id === selected) ??
-    SITE_CONFIG.servers[0]
+  useEffect(() => { fetch("/api/join/servers").then(r => r.ok ? r.json() : null).then(d => { if (Array.isArray(d?.servers) && d.servers.length) setServers(d.servers) }).catch(() => {}) }, [])
+
+  const selected = params.get("server") ?? servers[0]?.id ?? "survival"
+  const server = servers.find((item) => item.id === selected) ?? servers[0]
 
   return (
     <div className="portal-bg min-h-screen text-white">
@@ -65,7 +66,7 @@ function JoinContent() {
           </h2>
 
           <div className="grid sm:grid-cols-3 gap-3 mt-6">
-            {SITE_CONFIG.servers.map((item) => (
+            {servers.map((item) => (
               <Link
                 key={item.id}
                 href={`/join?server=${item.id}`}
@@ -98,37 +99,18 @@ function JoinContent() {
 
           <div className="grid md:grid-cols-2 gap-4 mt-6">
             <div className="info-box">
-              <span>サーバー</span>
-
-              <strong>
-                {server.label}
-              </strong>
-
-              <p className="text-gray-500 text-sm mt-1">
-                接続先は配信・運営から案内されたものを使用してください。
-              </p>
+              <span>サーバー</span><strong>{server.label}</strong>
+              <p className="text-gray-500 text-sm mt-1">{server.description}</p>
             </div>
-
             <div className="info-box">
-              <span>対応エディション</span>
-
-              <strong>
-                {server.edition}
-              </strong>
-
-              <p className="text-gray-500 text-sm mt-1">
-                Bedrock版はGeyser経由での参加を想定しています。
-              </p>
+              <span>対応エディション</span><strong>{server.edition}</strong>
+              <p className="text-gray-500 text-sm mt-1">Java版・Bedrock版それぞれの参加方法を下に案内しています。</p>
             </div>
           </div>
 
-          <div className="notice-box mt-5">
-            ⚙️ <b>サーバーアドレス・ポート</b>
-
-            <p className="text-gray-400 text-sm mt-1">
-              公開接続情報は運用開始時にここへ設定します。
-              現在は誤接続防止のため固定値を表示していません。
-            </p>
+          <div className="grid md:grid-cols-2 gap-4 mt-5">
+            <div className="notice-box">⚙️ <b>Java版で参加</b><p className="text-gray-400 text-sm mt-2">サーバーアドレス：<code>{server.javaAddress || "未設定"}</code>{server.javaPort && <>（ポート {server.javaPort}）</>}</p></div>
+            <div className="notice-box">🟩 <b>Bedrock版で参加</b><p className="text-gray-400 text-sm mt-2">サーバー：<code>{server.bedrockAddress || "未設定"}</code>{server.bedrockPort && <> / ポート {server.bedrockPort}</>}</p>{server.bedrockFriendJoin && <p className="text-cyan-300 text-sm mt-2">👥 フレンド参加：Minecraftの「フレンド」一覧から <b>{server.bedrockFriendName || "MCS"}</b> を選んで参加できます。</p>}</div>
           </div>
         </section>
 
