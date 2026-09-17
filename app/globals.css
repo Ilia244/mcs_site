@@ -139,3 +139,18 @@ h1,h2,h3 { font-family:var(--font-geist-sans); }
     overflow: hidden;
   }
 }
+
+/* Admin post editor: keep the long form independently scrollable on desktop. */
+@media (min-width: 1280px) {
+  .admin-post-editor {
+    scrollbar-width: thin;
+    scrollbar-color: rgba(34, 211, 238, 0.45) transparent;
+  }
+  .admin-post-editor::-webkit-scrollbar { width: 6px; }
+  .admin-post-editor::-webkit-scrollbar-track { background: transparent; }
+  .admin-post-editor::-webkit-scrollbar-thumb {
+    background: rgba(34, 211, 238, 0.45);
+    border-radius: 9999px;
+  }
+  .admin-post-editor::-webkit-scrollbar-thumb:hover { background: rgba(34, 211, 238, 0.7); }
+}
