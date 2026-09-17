@@ -10,12 +10,14 @@ export type JoinServerConfig = {
   bedrockPort: string
   bedrockFriendJoin: boolean
   bedrockFriendName: string
+  /** 通常サーバーはロビー経由。special のみ個別接続先として案内します。 */
+  joinMode: "lobby" | "special"
 }
 
 export const DEFAULT_JOIN_SERVERS: JoinServerConfig[] = [
-  { id: "survival", name: "SURVIVAL", label: "サバイバル", description: "みんなで遊ぶメインサーバー", edition: "Java / Bedrock", javaAddress: "", javaPort: "25565", bedrockAddress: "", bedrockPort: "19132", bedrockFriendJoin: true, bedrockFriendName: "MCS" },
-  { id: "creative", name: "CREATIVE", label: "クリエイティブ", description: "建築・制作を楽しむサーバー", edition: "Java / Bedrock", javaAddress: "", javaPort: "25565", bedrockAddress: "", bedrockPort: "19132", bedrockFriendJoin: true, bedrockFriendName: "MCS" },
-  { id: "event", name: "EVENT", label: "イベント", description: "参加型企画・イベント用サーバー", edition: "Java / Bedrock", javaAddress: "", javaPort: "25565", bedrockAddress: "", bedrockPort: "19132", bedrockFriendJoin: true, bedrockFriendName: "MCS" },
+  { id: "survival", name: "SURVIVAL", label: "サバイバル", description: "みんなで遊ぶメインサーバー", edition: "Java / Bedrock", javaAddress: "", javaPort: "25565", bedrockAddress: "", bedrockPort: "19132", bedrockFriendJoin: true, bedrockFriendName: "MCS", joinMode: "lobby" },
+  { id: "creative", name: "CREATIVE", label: "クリエイティブ", description: "建築・制作を楽しむサーバー", edition: "Java / Bedrock", javaAddress: "", javaPort: "25565", bedrockAddress: "", bedrockPort: "19132", bedrockFriendJoin: true, bedrockFriendName: "MCS", joinMode: "lobby" },
+  { id: "event", name: "EVENT", label: "イベント", description: "参加型企画・イベント用サーバー", edition: "Java / Bedrock", javaAddress: "", javaPort: "25565", bedrockAddress: "", bedrockPort: "19132", bedrockFriendJoin: true, bedrockFriendName: "MCS", joinMode: "lobby" },
 ]
 
 export const SITE_CONFIG = {

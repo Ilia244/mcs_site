@@ -53,7 +53,7 @@ export default function HelpPage() {
           <p className="section-kicker">MCS / HELP</p>
           <h1 className="text-4xl md:text-5xl font-bold">Minecraft参加・操作ヘルプ</h1>
           <p className="text-gray-400 mt-4 max-w-3xl leading-7">
-            サーバーへの参加方法や接続情報の見方、Bedrock版のフレンド参加、サーバー追加の設定などをまとめています。
+            MCSロビーへの参加方法や接続情報の見方、Bedrock版のフレンド参加、特設サーバーの接続方法などをまとめています。
             わからないことがあったときは、まずここを確認してください。
           </p>
         </header>
@@ -83,7 +83,7 @@ export default function HelpPage() {
           <p className="section-kicker">START</p>
           <h2 className="text-2xl font-bold mt-1">まずはここから</h2>
           <p className="text-gray-300 mt-4 leading-7">
-            通常は「参加方法」ページで遊びたいサーバーを選び、表示された接続情報を使ってMinecraftから接続します。
+            通常は「参加方法」ページからMCSロビーへ参加します。ロビーから各サーバーへ移動できます。イベントなどの特設サーバーだけ、個別の接続方法が案内される場合があります。
           </p>
           <div className="grid md:grid-cols-2 gap-4 mt-5">
             <Link href="/join" className="portal-card block-hover">
