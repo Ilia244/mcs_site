@@ -90,6 +90,8 @@ export async function sendPushForNotification(notificationId: string) {
 
   let sent = 0
   let removed = 0
+  let failed = 0
+  const errors: string[] = []
 
   for (const sub of (subscriptions || []) as PushSubscriptionRow[]) {
     // 設定が存在しない利用者は従来どおりON扱いにする。
@@ -113,10 +115,13 @@ export async function sendPushForNotification(notificationId: string) {
         await db.from("push_subscriptions").delete().eq("id", sub.id)
         removed++
       } else {
-        console.error("Web Push送信失敗:", status, error?.message || error)
+        failed++
+        const message = error?.message || String(error)
+        errors.push(`${status || "ERR"}: ${message}`)
+        console.error("Web Push送信失敗:", status, message)
       }
     }
   }
 
-  return { sent, removed, skipped: false }
+  return { sent, removed, failed, errors: errors.slice(0, 5), skipped: false }
 }

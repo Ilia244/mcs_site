@@ -23,6 +23,7 @@ export default function PushNotificationSettings({ compact = false }: Props) {
   const [message, setMessage] = useState("")
   const [preferences, setPreferences] = useState(DEFAULT_NOTIFICATION_PREFERENCES)
   const [settingsOpen, setSettingsOpen] = useState(false)
+  const [testing, setTesting] = useState(false)
 
   const loadPreferences = async () => {
     if (!accessToken) return
@@ -104,6 +105,29 @@ export default function PushNotificationSettings({ compact = false }: Props) {
     }
   }
 
+  const sendTest = async () => {
+    if (!accessToken) return
+    setTesting(true)
+    setMessage("")
+    try {
+      const r = await fetch("/api/push/test", {
+        method: "POST",
+        headers: { Authorization: `Bearer ${accessToken}` },
+      })
+      const j = await r.json().catch(() => ({}))
+      if (!r.ok || !j.ok) {
+        const detail = j?.errors?.[0] || j?.error || `送信失敗 (${r.status})`
+        throw new Error(`${detail} / 送信=${j?.sent ?? 0}, 失敗=${j?.failed ?? 0}, 登録=${(j?.sent ?? 0) + (j?.failed ?? 0) + (j?.removed ?? 0)}`)
+      }
+      setMessage(`テスト通知を送信しました（送信 ${j.sent}件）。`)
+    } catch (e: any) {
+      console.error(e)
+      setMessage(e?.message || "テスト通知の送信に失敗しました。")
+    } finally {
+      setTesting(false)
+    }
+  }
+
   const disable = async () => {
     if (!accessToken) return
     setBusy(true)
@@ -177,14 +201,17 @@ export default function PushNotificationSettings({ compact = false }: Props) {
                 </div>
               </div>
               {supported && permission !== "denied" && (
-                <button
-                  type="button"
-                  disabled={busy}
-                  onClick={enabled ? disable : enable}
-                  className="shrink-0 px-3 py-1.5 rounded-lg bg-white/10 border border-white/15 hover:bg-white/15 disabled:opacity-50 text-xs font-semibold"
-                >
-                  {busy ? "処理中…" : enabled ? "通知OFF" : "通知ON"}
-                </button>
+                <div className="flex items-center gap-2 shrink-0">
+                  <button
+                    type="button"
+                    disabled={busy}
+                    onClick={enabled ? disable : enable}
+                    className="px-3 py-1.5 rounded-lg bg-white/10 border border-white/15 hover:bg-white/15 disabled:opacity-50 text-xs font-semibold"
+                  >
+                    {busy ? "処理中…" : enabled ? "通知OFF" : "通知ON"}
+                  </button>
+                  {enabled && <button type="button" disabled={testing} onClick={() => void sendTest()} className="px-3 py-1.5 rounded-lg bg-cyan-500/10 border border-cyan-400/20 text-cyan-300 hover:bg-cyan-500/15 disabled:opacity-50 text-xs font-semibold">{testing ? "送信中…" : "テスト"}</button>}
+                </div>
               )}
             </div>
 
@@ -246,10 +273,13 @@ export default function PushNotificationSettings({ compact = false }: Props) {
           <p className="text-sm text-gray-400 mt-1">新着動画・LIVE・お知らせを端末の通知として受け取ります。</p>
         </div>
         {supported && permission !== "denied" && (
-          <button type="button" disabled={busy} onClick={enabled ? disable : enable}
-            className="px-3 py-2 rounded-xl bg-white/10 border border-white/15 hover:bg-white/15 disabled:opacity-50 text-xs font-semibold">
-            {busy ? "処理中…" : enabled ? "通知をOFF" : "通知をON"}
-          </button>
+          <div className="flex items-center gap-2">
+            <button type="button" disabled={busy} onClick={enabled ? disable : enable}
+              className="px-3 py-2 rounded-xl bg-white/10 border border-white/15 hover:bg-white/15 disabled:opacity-50 text-xs font-semibold">
+              {busy ? "処理中…" : enabled ? "通知をOFF" : "通知をON"}
+            </button>
+            {enabled && <button type="button" disabled={testing} onClick={() => void sendTest()} className="px-3 py-2 rounded-xl bg-cyan-500/10 border border-cyan-400/20 text-cyan-300 hover:bg-cyan-500/15 disabled:opacity-50 text-xs font-semibold">{testing ? "送信中…" : "テスト通知"}</button>}
+          </div>
         )}
       </div>
       {!supported && <p className="text-xs text-amber-300 mt-2">このブラウザではWeb Push通知を利用できません。</p>}

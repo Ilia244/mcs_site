@@ -37,7 +37,7 @@ export async function POST(req: NextRequest) {
 
     if (error) return NextResponse.json({ error: error.message }, { status: 500 })
     const result = await sendPushForNotification(notification.id)
-    return NextResponse.json({ ok: true, ...result })
+    return NextResponse.json({ ok: result.sent > 0 && result.failed === 0, notificationId: notification.id, ...result })
   } catch (e: any) {
     return NextResponse.json({ error: e?.message || "server error" }, { status: 500 })
   }
