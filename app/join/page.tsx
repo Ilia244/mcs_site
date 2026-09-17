@@ -6,6 +6,32 @@ import { useSearchParams } from "next/navigation"
 
 import { SITE_CONFIG, STREAM_CONFIG, DEFAULT_JOIN_SERVERS, type JoinServerConfig } from "@/lib/site-config"
 
+function CopyButton({ value, label = "コピー" }: { value: string; label?: string }) {
+  const [copied, setCopied] = useState(false)
+
+  const copy = async () => {
+    if (!value) return
+    try {
+      await navigator.clipboard.writeText(value)
+      setCopied(true)
+      window.setTimeout(() => setCopied(false), 1400)
+    } catch {
+      // Clipboard APIが使えない環境でも何も壊さない
+    }
+  }
+
+  return (
+    <button
+      type="button"
+      onClick={copy}
+      disabled={!value}
+      className="shrink-0 rounded-lg border border-cyan-400/20 bg-cyan-400/5 px-3 py-1.5 text-xs text-cyan-200 hover:bg-cyan-400/10 disabled:opacity-40"
+    >
+      {copied ? "✓ コピーしました" : label}
+    </button>
+  )
+}
+
 function JoinContent() {
   const params = useSearchParams()
 
@@ -109,8 +135,40 @@ function JoinContent() {
           </div>
 
           <div className="grid md:grid-cols-2 gap-4 mt-5">
-            <div className="notice-box">⚙️ <b>Java版で参加</b><p className="text-gray-400 text-sm mt-2">サーバーアドレス：<code>{server.javaAddress || "未設定"}</code>{server.javaPort && <>（ポート {server.javaPort}）</>}</p></div>
-            <div className="notice-box">🟩 <b>Bedrock版で参加</b><p className="text-gray-400 text-sm mt-2">サーバー：<code>{server.bedrockAddress || "未設定"}</code>{server.bedrockPort && <> / ポート {server.bedrockPort}</>}</p>{server.bedrockFriendJoin && <p className="text-cyan-300 text-sm mt-2">👥 フレンド参加：Minecraftの「フレンド」一覧から <b>{server.bedrockFriendName || "MCS"}</b> を選んで参加できます。</p>}</div>
+            <div className="notice-box">
+              <div className="flex items-center justify-between gap-3">
+                <b>⚙️ Java版で参加</b>
+                <CopyButton value={[server.javaAddress, server.javaPort].filter(Boolean).join(":")} label="接続情報をコピー" />
+              </div>
+              <div className="mt-3 rounded-xl border border-white/10 bg-black/10 p-3 space-y-2">
+                <div className="flex items-center justify-between gap-3 min-w-0">
+                  <div className="min-w-0"><span className="text-xs text-gray-500 block">サーバーアドレス</span><code className="break-all">{server.javaAddress || "未設定"}</code></div>
+                  <CopyButton value={server.javaAddress} label="アドレスをコピー" />
+                </div>
+                {server.javaPort && <div className="flex items-center justify-between gap-3 min-w-0">
+                  <div><span className="text-xs text-gray-500 block">ポート</span><code>{server.javaPort}</code></div>
+                  <CopyButton value={server.javaPort} label="ポートをコピー" />
+                </div>}
+              </div>
+            </div>
+
+            <div className="notice-box">
+              <div className="flex items-center justify-between gap-3">
+                <b>🟩 Bedrock版で参加</b>
+                <CopyButton value={[server.bedrockAddress, server.bedrockPort].filter(Boolean).join(":")} label="接続情報をコピー" />
+              </div>
+              <div className="mt-3 rounded-xl border border-white/10 bg-black/10 p-3 space-y-2">
+                <div className="flex items-center justify-between gap-3 min-w-0">
+                  <div className="min-w-0"><span className="text-xs text-gray-500 block">サーバーアドレス</span><code className="break-all">{server.bedrockAddress || "未設定"}</code></div>
+                  <CopyButton value={server.bedrockAddress} label="アドレスをコピー" />
+                </div>
+                {server.bedrockPort && <div className="flex items-center justify-between gap-3 min-w-0">
+                  <div><span className="text-xs text-gray-500 block">ポート</span><code>{server.bedrockPort}</code></div>
+                  <CopyButton value={server.bedrockPort} label="ポートをコピー" />
+                </div>}
+              </div>
+              {server.bedrockFriendJoin && <p className="text-cyan-300 text-sm mt-3">👥 フレンド参加：Minecraftの「フレンド」一覧から <b>{server.bedrockFriendName || "MCS"}</b> を選んで参加できます。</p>}
+            </div>
           </div>
         </section>
 
