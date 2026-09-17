@@ -1,8 +1,7 @@
 "use client"
 
 import Link from "next/link"
-import { Suspense, useEffect, useState } from "react"
-import { useSearchParams } from "next/navigation"
+import { useEffect, useState } from "react"
 
 import { SITE_CONFIG, STREAM_CONFIG, DEFAULT_JOIN_SERVERS, type JoinServerConfig } from "@/lib/site-config"
 
@@ -48,6 +47,10 @@ function JoinContent() {
     servers.find((item) => item.id.toLowerCase() === "lobby") ??
     servers.find((item) => item.name.toLowerCase() === "lobby") ??
     null
+
+  const lobbyServers = servers.filter(
+    (item) => item.joinMode === "lobby" && item.id !== lobby?.id,
+  )
 
   const specialServers = servers.filter(
     (item) => item.joinMode === "special" && item.id !== lobby?.id,
@@ -189,15 +192,48 @@ function JoinContent() {
                 </div>
                 <div className="info-box">
                   <span>ロビーから参加できるサーバー</span>
-                  <strong>
-                    {servers.filter((x) => x.joinMode === "lobby" && x.id !== lobby.id).length || "各種"}
-                  </strong>
+                  <strong>{lobbyServers.length} サーバー</strong>
                   <p className="text-gray-500 text-sm mt-1">
-                    サバイバル・クリエイティブなどはロビー内から選択します。
+                    下記のサーバーはすべてMCSロビーから参加できます。
                   </p>
                 </div>
               </div>
               {renderConnection(lobby)}
+
+              <div className="mt-8">
+                <div className="flex items-end justify-between gap-3 mb-3">
+                  <div>
+                    <p className="text-xs text-cyan-300 font-bold tracking-widest">LOBBY SERVERS</p>
+                    <h3 className="text-lg font-bold mt-1">ロビーから参加出来るサーバー</h3>
+                  </div>
+                  <span className="text-xs text-gray-500">{lobbyServers.length} サーバー</span>
+                </div>
+
+                {lobbyServers.length > 0 ? (
+                  <div className="space-y-3">
+                    {lobbyServers.map((item) => (
+                      <div
+                        key={item.id}
+                        className="rounded-xl border border-white/10 bg-black/10 px-4 py-3"
+                      >
+                        <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
+                          <h4 className="font-bold">{item.label || item.name}</h4>
+                          {item.name && item.name !== item.label && (
+                            <span className="text-xs text-gray-500">{item.name}</span>
+                          )}
+                        </div>
+                        <p className="text-sm text-gray-400 mt-1">
+                          {item.description || "ロビーから参加できる通常サーバーです。"}
+                        </p>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="rounded-xl border border-white/10 bg-black/10 px-4 py-3 text-sm text-gray-500">
+                    現在、ロビーから参加できるサーバーは登録されていません。
+                  </div>
+                )}
+              </div>
             </>
           ) : (
             <div className="mt-6 rounded-xl border border-amber-400/20 bg-amber-400/5 p-4 text-amber-200">
