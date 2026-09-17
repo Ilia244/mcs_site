@@ -154,6 +154,13 @@ export default function Home() {
               >
                 ▶ YouTube
               </a>
+
+              <Link
+                href="/help"
+                className="portal-btn portal-btn-dark min-w-[150px]"
+              >
+                ❓ ヘルプ
+              </Link>
             </div>
 
             {/* Quick navigation */}
@@ -190,6 +197,15 @@ export default function Home() {
                 className="transition hover:text-cyan-300"
               >
                 Rules
+              </Link>
+
+              <span className="text-white/10">•</span>
+
+              <Link
+                href="/help"
+                className="transition hover:text-cyan-300"
+              >
+                Help
               </Link>
             </div>
           </div>
