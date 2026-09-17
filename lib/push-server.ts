@@ -63,13 +63,29 @@ export async function sendPushForNotification(notificationId: string) {
     for (const row of preferences || []) enabledByUser.set(row.user_id, row.enabled !== false)
   }
 
+  const categoryLabels: Record<string, string> = {
+    info: "一般のお知らせ",
+    mcs: "MCS",
+    event: "イベント",
+    live: "LIVE / 配信",
+    maintenance: "メンテナンス",
+    important: "重要なお知らせ",
+    youtube: "YouTube新着",
+    test: "テスト通知",
+  }
+
   const payload = JSON.stringify({
+    // Service Worker側でも変更可能な形にしておき、将来サイト名を変更しても対応しやすくする。
+    siteName: "MCS・Ilia.",
     title: notification.title,
     body: notification.body || "",
     url: notification.link_url || "/notifications",
     category: notification.category,
+    categoryLabel: categoryLabels[notification.category] || notification.category,
     priority: notification.priority,
     notificationId: notification.id,
+    icon: "/site-notification-icon.png",
+    badge: "/site-notification-icon.png",
   })
 
   let sent = 0

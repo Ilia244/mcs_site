@@ -1,14 +1,27 @@
+const PUSH_SITE_NAME = "MCS・Ilia."
+const PUSH_SITE_ICON = "/site-notification-icon.png"
+
 self.addEventListener("install", () => self.skipWaiting())
 self.addEventListener("activate", event => event.waitUntil(self.clients.claim()))
 
 self.addEventListener("push", event => {
   let data = {}
   try { data = event.data ? event.data.json() : {} } catch {}
-  const title = data.title || "MCS・Ilia."
+
+  const rawTitle = data.title || "新しいお知らせ"
+  // Windows/macOSなどで通知だけを見ても、サイト由来だとすぐ分かるように
+  // サイト名を通知タイトルの先頭へ付ける。
+  const title = data.siteName
+    ? `${data.siteName} | ${rawTitle}`
+    : `${PUSH_SITE_NAME} | ${rawTitle}`
+
+  const categoryLabel = data.categoryLabel ? `【${data.categoryLabel}】` : ""
+  const body = `${categoryLabel}${data.body || "新しいお知らせがあります。"}`
+
   const options = {
-    body: data.body || "新しいお知らせがあります。",
-    icon: "/default_avatar.png",
-    badge: "/default_avatar.png",
+    body,
+    icon: data.icon || PUSH_SITE_ICON,
+    badge: data.badge || PUSH_SITE_ICON,
     tag: data.notificationId || "mcs-notification",
     renotify: true,
     data: { url: data.url || "/notifications" },
