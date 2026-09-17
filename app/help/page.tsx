@@ -1,5 +1,6 @@
 "use client"
 
+import Image from "next/image"
 import Link from "next/link"
 import { useAuth } from "@/app/providers/AuthProvider"
 import { hasPermission } from "@/lib/role"
@@ -114,6 +115,58 @@ export default function HelpPage() {
               サーバーアドレスを入力し、必要な場合はポートも指定して接続します。参加方法ページの「接続情報をコピー」を使うと入力ミスを減らせます。
             </Step>
           </div>
+
+          <div className="mt-8 rounded-2xl border border-cyan-400/15 bg-cyan-400/5 p-4 md:p-5">
+            <p className="section-kicker">IMAGE GUIDE</p>
+            <h3 className="text-xl font-bold mt-1">画像で見る：Java版でサーバーを追加</h3>
+            <p className="text-gray-400 text-sm leading-7 mt-2">
+              実際のMinecraft Java版の画面を使って、サーバー追加から接続情報の入力までを順番に案内します。
+            </p>
+
+            <div className="space-y-6 mt-5">
+              {[
+                {
+                  src: "/help/java/server-add-01.jpg",
+                  alt: "Minecraft Java Editionのタイトル画面でマルチプレイを選択する画面",
+                  step: "STEP 1",
+                  title: "「マルチプレイ」を選択",
+                  text: "Minecraftのタイトル画面から「マルチプレイ」をクリックします。",
+                },
+                {
+                  src: "/help/java/server-add-02.jpg",
+                  alt: "Minecraft Java Editionのマルチプレイ画面でサーバーを追加を選択する画面",
+                  step: "STEP 2",
+                  title: "「サーバーを追加」を選択",
+                  text: "マルチプレイ画面の下側にある「サーバーを追加」をクリックします。",
+                },
+                {
+                  src: "/help/java/server-add-03.jpg",
+                  alt: "Minecraft Java Editionのサーバー追加画面でサーバー名とサーバーアドレスを入力する画面",
+                  step: "STEP 3",
+                  title: "サーバー名・アドレスを入力して「完了」",
+                  text: "「サーバー名」は分かりやすい名前を入力し、「サーバーアドレス」には参加方法ページに表示されているアドレスとポートを入力します。入力が終わったら「完了」をクリックします。",
+                },
+              ].map((item) => (
+                <div key={item.src} className="overflow-hidden rounded-2xl border border-white/10 bg-black/20">
+                  <div className="aspect-video bg-black/30">
+                    <Image
+                      src={item.src}
+                      alt={item.alt}
+                      width={1280}
+                      height={720}
+                      className="h-auto w-full object-contain"
+                    />
+                  </div>
+                  <div className="p-4 md:p-5">
+                    <p className="text-xs font-bold tracking-[0.18em] text-cyan-300">{item.step}</p>
+                    <h4 className="font-bold text-lg mt-1">{item.title}</h4>
+                    <p className="text-gray-400 text-sm leading-7 mt-2">{item.text}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
           <Note>サーバーアドレスに <code className="text-cyan-200">:25565</code> のようなポート番号が付いている場合は、そのまま入力できます。ポートが別に表示されている場合は、Minecraft側の入力欄に合わせて設定してください。</Note>
         </section>
 
