@@ -39,10 +39,8 @@ function JoinContent() {
 
   useEffect(() => { fetch("/api/join/servers").then(r => r.ok ? r.json() : null).then(d => { if (Array.isArray(d?.servers) && d.servers.length) setServers(d.servers) }).catch(() => {}) }, [])
 
-  const lobbyServer = servers.find((item) => item.joinMode !== "special") ?? servers[0]
-  const specialServers = servers.filter((item) => item.joinMode === "special")
-  const selected = params.get("server") ?? lobbyServer?.id ?? "survival"
-  const server = servers.find((item) => item.id === selected) ?? lobbyServer
+  const selected = params.get("server") ?? servers[0]?.id ?? "survival"
+  const server = servers.find((item) => item.id === selected) ?? servers[0]
 
   return (
     <div className="portal-bg min-h-screen text-white">
@@ -90,53 +88,44 @@ function JoinContent() {
           <p className="section-kicker">STEP 01</p>
 
           <h2 className="text-2xl font-bold mt-1">
-            MCSロビーに参加
+            参加するサーバーを選択
           </h2>
 
-          <p className="text-gray-300 mt-3">
-            通常のサーバーは、まずMCSロビーへ参加し、ロビー内から遊びたいサーバーへ移動します。
-          </p>
+          <div className="grid sm:grid-cols-3 gap-3 mt-6">
+            {servers.map((item) => (
+              <Link
+                key={item.id}
+                href={`/join?server=${item.id}`}
+                className={`join-server ${
+                  item.id === server.id ? "join-server-selected" : ""
+                }`}
+              >
+                <span className="text-xs text-cyan-300">
+                  {item.name}
+                </span>
 
-          {lobbyServer && (
-            <div className="mt-6 rounded-2xl border border-cyan-400/20 bg-cyan-400/5 p-5">
-              <div className="flex items-center justify-between gap-3 flex-wrap">
-                <div>
-                  <span className="text-xs text-cyan-300">{lobbyServer.name}</span>
-                  <b className="block mt-1 text-xl">{lobbyServer.label}</b>
-                  <p className="text-sm text-gray-400 mt-1">{lobbyServer.description}</p>
-                </div>
-                <span className="text-xs rounded-full border border-cyan-400/20 px-3 py-1 text-cyan-200">ロビー経由</span>
-              </div>
-            </div>
-          )}
+                <b className="block mt-1">
+                  {item.label}
+                </b>
 
-          {specialServers.length > 0 && (
-            <div className="mt-6">
-              <h3 className="font-bold">⚠️ 特設サーバー</h3>
-              <p className="text-sm text-gray-400 mt-1">イベントなど、個別の接続先が案内されるサーバーです。</p>
-              <div className="grid sm:grid-cols-2 gap-3 mt-4">
-                {specialServers.map((item) => (
-                  <Link key={item.id} href={`/join?server=${item.id}`} className={`join-server ${item.id === server?.id ? "join-server-selected" : ""}`}>
-                    <span className="text-xs text-cyan-300">{item.name}</span>
-                    <b className="block mt-1">{item.label}</b>
-                    <small className="text-gray-500">{item.edition} · 個別接続</small>
-                  </Link>
-                ))}
-              </div>
-            </div>
-          )}
+                <small className="text-gray-500">
+                  {item.edition}
+                </small>
+              </Link>
+            ))}
+          </div>
         </section>
 
         <section className="portal-panel mt-5">
           <p className="section-kicker">STEP 02</p>
 
           <h2 className="text-2xl font-bold mt-1">
-            {server?.joinMode === "special" ? "特設サーバーの接続情報" : "MCSロビーの接続情報"}
+            接続情報
           </h2>
 
           <div className="grid md:grid-cols-2 gap-4 mt-6">
             <div className="info-box">
-              <span>接続先</span><strong>{server.label}</strong>
+              <span>サーバー</span><strong>{server.label}</strong>
               <p className="text-gray-500 text-sm mt-1">{server.description}</p>
             </div>
             <div className="info-box">

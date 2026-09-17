@@ -104,7 +104,7 @@ export default function HelpPage() {
           <h2 className="text-2xl font-bold mt-1">Java版の参加方法</h2>
           <div className="space-y-3 mt-5">
             <Step n="1" title="参加するサーバーを選択">
-              <Link href="/join" className="text-cyan-300 hover:underline">参加方法ページ</Link>を開き、通常はMCSロビーへ参加します。ロビー内から遊びたいサーバーへ移動できます。特設サーバーのみ個別の接続情報を確認してください。
+              <Link href="/join" className="text-cyan-300 hover:underline">参加方法ページ</Link>を開き、遊びたいサーバーを選択します。
             </Step>
             <Step n="2" title="Java版の接続情報を確認">
               「Java版で参加」の欄にあるサーバーアドレスとポートを確認します。通常のMinecraft Java版では、サーバーアドレスとポートを「アドレス:ポート」の形で入力できます。
