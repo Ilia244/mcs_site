@@ -1,8 +1,9 @@
 export const SITE_CONFIG = {
   name: "Ilia./衣李亜",
   subtitle: "Official Portal",
-  youtube: "https://www.youtube.com/@Ilia244",
-  discord: "https://discord.com/",
+  youtube: "https://www.youtube.com/@Ilia_yk",
+  discordOfficial: "https://discord.gg/bvaSDCqHc4",
+  discordMcs: "https://discord.gg/x82YNjeHMr",
   dynmap: "",
   servers: [
     { id: "survival", name: "SURVIVAL", label: "サバイバル", description: "みんなで遊ぶメインサーバー", edition: "Java / Bedrock" },

@@ -321,7 +321,7 @@ export default function Home() {
         </section>
 
         {/* LINKS */}
-        <section className="grid gap-4 md:grid-cols-3">
+        <section className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           <Link
             href="/youtube"
             className="portal-card portal-link-card"
@@ -335,7 +335,7 @@ export default function Home() {
           </Link>
 
           <a
-            href={SITE_CONFIG.discord}
+            href={SITE_CONFIG.discordOfficial}
             target="_blank"
             rel="noreferrer"
             className="portal-card portal-link-card"
@@ -343,8 +343,22 @@ export default function Home() {
             <span>💬</span>
 
             <div>
-              <b>Community</b>
-              <p>Discordコミュニティに参加</p>
+              <b>Ilia./衣李亜 公式Discord</b>
+              <p>公式コミュニティに参加</p>
+            </div>
+          </a>
+
+          <a
+            href={SITE_CONFIG.discordMcs}
+            target="_blank"
+            rel="noreferrer"
+            className="portal-card portal-link-card"
+          >
+            <span>🎮</span>
+
+            <div>
+              <b>MCS公式Discord</b>
+              <p>MCSの参加型・Minecraftコミュニティ</p>
             </div>
           </a>
 
