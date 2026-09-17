@@ -150,6 +150,9 @@ function JoinContent() {
                   <CopyButton value={server.javaPort} label="ポートをコピー" />
                 </div>}
               </div>
+              <div className="mt-3 flex justify-end">
+                <Link href="/help#java" className="text-xs text-cyan-300/80 hover:text-cyan-200 hover:underline">ヘルプ？ →</Link>
+              </div>
             </div>
 
             <div className="notice-box">
@@ -168,6 +171,9 @@ function JoinContent() {
                 </div>}
               </div>
               {server.bedrockFriendJoin && <p className="text-cyan-300 text-sm mt-3">👥 フレンド参加：Minecraftの「フレンド」一覧から <b>{server.bedrockFriendName || "MCS"}</b> を選んで参加できます。</p>}
+              <div className="mt-3 flex justify-end">
+                <Link href="/help#bedrock" className="text-xs text-cyan-300/80 hover:text-cyan-200 hover:underline">ヘルプ？ →</Link>
+              </div>
             </div>
           </div>
         </section>
