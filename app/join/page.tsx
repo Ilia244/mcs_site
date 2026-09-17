@@ -33,14 +33,107 @@ function CopyButton({ value, label = "コピー" }: { value: string; label?: str
 }
 
 function JoinContent() {
-  const params = useSearchParams()
-
   const [servers, setServers] = useState<JoinServerConfig[]>(DEFAULT_JOIN_SERVERS)
 
-  useEffect(() => { fetch("/api/join/servers").then(r => r.ok ? r.json() : null).then(d => { if (Array.isArray(d?.servers) && d.servers.length) setServers(d.servers) }).catch(() => {}) }, [])
+  useEffect(() => {
+    fetch("/api/join/servers")
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d) => {
+        if (Array.isArray(d?.servers) && d.servers.length) setServers(d.servers)
+      })
+      .catch(() => {})
+  }, [])
 
-  const selected = params.get("server") ?? servers[0]?.id ?? "survival"
-  const server = servers.find((item) => item.id === selected) ?? servers[0]
+  const lobby =
+    servers.find((item) => item.id.toLowerCase() === "lobby") ??
+    servers.find((item) => item.name.toLowerCase() === "lobby") ??
+    null
+
+  const specialServers = servers.filter(
+    (item) => item.joinMode === "special" && item.id !== lobby?.id,
+  )
+
+  const renderConnection = (item: JoinServerConfig) => (
+    <div className="grid md:grid-cols-2 gap-4 mt-5">
+      <div className="notice-box">
+        <div className="flex items-center justify-between gap-3">
+          <b>⚙️ Java版で参加</b>
+          <CopyButton
+            value={[item.javaAddress, item.javaPort].filter(Boolean).join(":")}
+            label="接続情報をコピー"
+          />
+        </div>
+        <div className="mt-3 rounded-xl border border-white/10 bg-black/10 p-3 space-y-2">
+          <div className="flex items-center justify-between gap-3 min-w-0">
+            <div className="min-w-0">
+              <span className="text-xs text-gray-500 block">サーバーアドレス</span>
+              <code className="break-all">{item.javaAddress || "未設定"}</code>
+            </div>
+            <CopyButton value={item.javaAddress} label="アドレスをコピー" />
+          </div>
+          {item.javaPort && (
+            <div className="flex items-center justify-between gap-3 min-w-0">
+              <div>
+                <span className="text-xs text-gray-500 block">ポート</span>
+                <code>{item.javaPort}</code>
+              </div>
+              <CopyButton value={item.javaPort} label="ポートをコピー" />
+            </div>
+          )}
+        </div>
+        <div className="mt-3 flex justify-end">
+          <Link
+            href="/help#java"
+            className="text-xs text-cyan-300/80 hover:text-cyan-200 hover:underline"
+          >
+            ヘルプ？ →
+          </Link>
+        </div>
+      </div>
+
+      <div className="notice-box">
+        <div className="flex items-center justify-between gap-3">
+          <b>🟩 Bedrock版で参加</b>
+          <CopyButton
+            value={[item.bedrockAddress, item.bedrockPort].filter(Boolean).join(":")}
+            label="接続情報をコピー"
+          />
+        </div>
+        <div className="mt-3 rounded-xl border border-white/10 bg-black/10 p-3 space-y-2">
+          <div className="flex items-center justify-between gap-3 min-w-0">
+            <div className="min-w-0">
+              <span className="text-xs text-gray-500 block">サーバーアドレス</span>
+              <code className="break-all">{item.bedrockAddress || "未設定"}</code>
+            </div>
+            <CopyButton value={item.bedrockAddress} label="アドレスをコピー" />
+          </div>
+          {item.bedrockPort && (
+            <div className="flex items-center justify-between gap-3 min-w-0">
+              <div>
+                <span className="text-xs text-gray-500 block">ポート</span>
+                <code>{item.bedrockPort}</code>
+              </div>
+              <CopyButton value={item.bedrockPort} label="ポートをコピー" />
+            </div>
+          )}
+        </div>
+        {item.bedrockFriendJoin && (
+          <p className="text-cyan-300 text-sm mt-3">
+            👥 フレンド参加：Minecraftの「フレンド」一覧から{" "}
+            <b>{item.bedrockFriendName || "MCS"}</b> を選んで参加できます。
+          </p>
+        )}
+        <div className="mt-3 flex justify-end">
+          <Link
+            href="/help#bedrock"
+            className="text-xs text-cyan-300/80 hover:text-cyan-200 hover:underline"
+          >
+            ヘルプ？ →
+          </Link>
+        </div>
+      </div>
+    </div>
+  )
 
   return (
     <div className="portal-bg min-h-screen text-white">
@@ -51,13 +144,9 @@ function JoinContent() {
 
         <div className="mt-6 mb-10">
           <p className="section-kicker">MCS / JOIN</p>
-
-          <h1 className="text-4xl md:text-5xl font-bold">
-            Minecraft参加方法
-          </h1>
-
+          <h1 className="text-4xl md:text-5xl font-bold">Minecraft参加方法</h1>
           <p className="text-gray-400 mt-4">
-            配信を見ながら、このページの手順で参加できます。
+            MCSでは、通常のサーバーはまずロビーへ参加し、ロビー内から各サーバーへ移動します。
           </p>
         </div>
 
@@ -67,12 +156,8 @@ function JoinContent() {
               <p className="text-xs text-red-400 font-bold tracking-widest">
                 🔴 PARTICIPATION OPEN
               </p>
-
-              <h2 className="text-xl font-bold mt-1">
-                {STREAM_CONFIG.title}
-              </h2>
+              <h2 className="text-xl font-bold mt-1">{STREAM_CONFIG.title}</h2>
             </div>
-
             <a
               href={STREAM_CONFIG.youtubeUrl}
               target="_blank"
@@ -86,116 +171,98 @@ function JoinContent() {
 
         <section className="portal-panel">
           <p className="section-kicker">STEP 01</p>
+          <h2 className="text-2xl font-bold mt-1">MCSロビーへ参加</h2>
+          <p className="text-gray-400 mt-3">
+            サバイバルやクリエイティブなどの通常サーバーを利用する場合、個別のサーバーを選ぶ必要はありません。
+            まずMCSロビーへ参加し、ロビーから遊びたいサーバーを選択してください。
+          </p>
 
-          <h2 className="text-2xl font-bold mt-1">
-            参加するサーバーを選択
-          </h2>
-
-          <div className="grid sm:grid-cols-3 gap-3 mt-6">
-            {servers.map((item) => (
-              <Link
-                key={item.id}
-                href={`/join?server=${item.id}`}
-                className={`join-server ${
-                  item.id === server.id ? "join-server-selected" : ""
-                }`}
-              >
-                <span className="text-xs text-cyan-300">
-                  {item.name}
-                </span>
-
-                <b className="block mt-1">
-                  {item.label}
-                </b>
-
-                <small className="text-gray-500">
-                  {item.edition}
-                </small>
-              </Link>
-            ))}
-          </div>
+          {lobby ? (
+            <>
+              <div className="grid md:grid-cols-2 gap-4 mt-6">
+                <div className="info-box">
+                  <span>入口</span>
+                  <strong>MCSロビー</strong>
+                  <p className="text-gray-500 text-sm mt-1">
+                    {lobby.description || "通常サーバーへ移動するための共通ロビーです。"}
+                  </p>
+                </div>
+                <div className="info-box">
+                  <span>ロビーから参加できるサーバー</span>
+                  <strong>
+                    {servers.filter((x) => x.joinMode === "lobby" && x.id !== lobby.id).length || "各種"}
+                  </strong>
+                  <p className="text-gray-500 text-sm mt-1">
+                    サバイバル・クリエイティブなどはロビー内から選択します。
+                  </p>
+                </div>
+              </div>
+              {renderConnection(lobby)}
+            </>
+          ) : (
+            <div className="mt-6 rounded-xl border border-amber-400/20 bg-amber-400/5 p-4 text-amber-200">
+              MCSロビーの接続情報がまだ設定されていません。管理者は「管理画面 → 参加方法」から
+              内部ID <code>lobby</code> のサーバーを登録してください。
+            </div>
+          )}
         </section>
+
+        {specialServers.length > 0 && (
+          <section className="portal-panel mt-5">
+            <p className="section-kicker">SPECIAL</p>
+            <h2 className="text-2xl font-bold mt-1">特設サーバー</h2>
+            <p className="text-gray-400 mt-3">
+              特設サーバーなど、ロビーを経由しないサーバーだけこちらに表示されます。
+            </p>
+
+            <div className="space-y-6 mt-6">
+              {specialServers.map((item) => (
+                <div
+                  key={item.id}
+                  className="rounded-2xl border border-fuchsia-400/15 bg-fuchsia-400/5 p-5"
+                >
+                  <div className="flex flex-wrap items-start justify-between gap-3">
+                    <div>
+                      <p className="text-xs text-fuchsia-300 font-bold tracking-widest">
+                        SPECIAL SERVER
+                      </p>
+                      <h3 className="text-xl font-bold mt-1">{item.label}</h3>
+                      <p className="text-sm text-gray-400 mt-1">{item.description}</p>
+                    </div>
+                    <span className="text-xs rounded-full border border-fuchsia-400/20 px-3 py-1 text-fuchsia-200">
+                      ロビーを経由せず直接参加
+                    </span>
+                  </div>
+                  {renderConnection(item)}
+                </div>
+              ))}
+            </div>
+          </section>
+        )}
 
         <section className="portal-panel mt-5">
           <p className="section-kicker">STEP 02</p>
-
-          <h2 className="text-2xl font-bold mt-1">
-            接続情報
-          </h2>
-
-          <div className="grid md:grid-cols-2 gap-4 mt-6">
-            <div className="info-box">
-              <span>サーバー</span><strong>{server.label}</strong>
-              <p className="text-gray-500 text-sm mt-1">{server.description}</p>
-            </div>
-            <div className="info-box">
-              <span>対応エディション</span><strong>{server.edition}</strong>
-              <p className="text-gray-500 text-sm mt-1">Java版・Bedrock版それぞれの参加方法を下に案内しています。</p>
-            </div>
-          </div>
-
-          <div className="grid md:grid-cols-2 gap-4 mt-5">
-            <div className="notice-box">
-              <div className="flex items-center justify-between gap-3">
-                <b>⚙️ Java版で参加</b>
-                <CopyButton value={[server.javaAddress, server.javaPort].filter(Boolean).join(":")} label="接続情報をコピー" />
-              </div>
-              <div className="mt-3 rounded-xl border border-white/10 bg-black/10 p-3 space-y-2">
-                <div className="flex items-center justify-between gap-3 min-w-0">
-                  <div className="min-w-0"><span className="text-xs text-gray-500 block">サーバーアドレス</span><code className="break-all">{server.javaAddress || "未設定"}</code></div>
-                  <CopyButton value={server.javaAddress} label="アドレスをコピー" />
-                </div>
-                {server.javaPort && <div className="flex items-center justify-between gap-3 min-w-0">
-                  <div><span className="text-xs text-gray-500 block">ポート</span><code>{server.javaPort}</code></div>
-                  <CopyButton value={server.javaPort} label="ポートをコピー" />
-                </div>}
-              </div>
-              <div className="mt-3 flex justify-end">
-                <Link href="/help#java" className="text-xs text-cyan-300/80 hover:text-cyan-200 hover:underline">ヘルプ？ →</Link>
-              </div>
-            </div>
-
-            <div className="notice-box">
-              <div className="flex items-center justify-between gap-3">
-                <b>🟩 Bedrock版で参加</b>
-                <CopyButton value={[server.bedrockAddress, server.bedrockPort].filter(Boolean).join(":")} label="接続情報をコピー" />
-              </div>
-              <div className="mt-3 rounded-xl border border-white/10 bg-black/10 p-3 space-y-2">
-                <div className="flex items-center justify-between gap-3 min-w-0">
-                  <div className="min-w-0"><span className="text-xs text-gray-500 block">サーバーアドレス</span><code className="break-all">{server.bedrockAddress || "未設定"}</code></div>
-                  <CopyButton value={server.bedrockAddress} label="アドレスをコピー" />
-                </div>
-                {server.bedrockPort && <div className="flex items-center justify-between gap-3 min-w-0">
-                  <div><span className="text-xs text-gray-500 block">ポート</span><code>{server.bedrockPort}</code></div>
-                  <CopyButton value={server.bedrockPort} label="ポートをコピー" />
-                </div>}
-              </div>
-              {server.bedrockFriendJoin && <p className="text-cyan-300 text-sm mt-3">👥 フレンド参加：Minecraftの「フレンド」一覧から <b>{server.bedrockFriendName || "MCS"}</b> を選んで参加できます。</p>}
-              <div className="mt-3 flex justify-end">
-                <Link href="/help#bedrock" className="text-xs text-cyan-300/80 hover:text-cyan-200 hover:underline">ヘルプ？ →</Link>
-              </div>
-            </div>
-          </div>
+          <h2 className="text-2xl font-bold mt-1">ロビーから遊びたいサーバーへ移動</h2>
+          <ul className="mt-5 space-y-3 text-gray-300">
+            <li>① 上の「MCSロビー」に参加します。</li>
+            <li>② ロビー内にあるサーバー選択から遊びたいモードを選びます。</li>
+            <li>③ サバイバル・クリエイティブなどへ移動して遊びます。</li>
+          </ul>
+          <p className="text-gray-500 text-sm mt-4">
+            ※ ロビー経由のサーバーは、この参加方法ページで個別に接続する必要はありません。
+          </p>
         </section>
 
         <section className="portal-panel mt-5">
           <p className="section-kicker">STEP 03</p>
-
-          <h2 className="text-2xl font-bold mt-1">
-            参加ルールを確認
-          </h2>
-
+          <h2 className="text-2xl font-bold mt-1">参加ルールを確認</h2>
           <ul className="mt-5 space-y-3 text-gray-300">
             <li>✓ 他の参加者が楽しめるように行動する</li>
             <li>✓ 暴言・荒らし・故意の妨害をしない</li>
             <li>✓ 配信主・運営スタッフの指示に従う</li>
             <li>✓ バグや不具合の悪用をしない</li>
           </ul>
-
-          <Link
-            href="/rules"
-            className="inline-block mt-6 text-cyan-300 hover:underline"
-          >
+          <Link href="/rules" className="inline-block mt-6 text-cyan-300 hover:underline">
             すべてのルールを読む →
           </Link>
         </section>

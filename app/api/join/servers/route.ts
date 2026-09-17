@@ -2,6 +2,30 @@ import { NextResponse } from "next/server"
 import { supabaseServer } from "@/lib/supabase-server"
 import { DEFAULT_JOIN_SERVERS, JoinServerConfig } from "@/lib/site-config"
 export const runtime = "nodejs"
-function normalize(value: unknown): JoinServerConfig[] { if (!Array.isArray(value)) return DEFAULT_JOIN_SERVERS; return value.map((x:any): JoinServerConfig => ({id:String(x.id||"").trim(),name:String(x.name||"SERVER").trim(),label:String(x.label||"サーバー").trim(),description:String(x.description||"").trim(),edition:String(x.edition||"Java / Bedrock").trim(),javaAddress:String(x.javaAddress||"").trim(),javaPort:String(x.javaPort||"25565").trim(),bedrockAddress:String(x.bedrockAddress||"").trim(),bedrockPort:String(x.bedrockPort||"19132").trim(),bedrockFriendJoin:x.bedrockFriendJoin!==false,bedrockFriendName:String(x.bedrockFriendName||"MCS").trim(),joinMode:x.joinMode==="special"?"special":"lobby"})).filter(x=>x.id) }
+function normalize(value: unknown): JoinServerConfig[] {
+  const source = Array.isArray(value) ? value : DEFAULT_JOIN_SERVERS
+  const servers = source
+    .map((x: any): JoinServerConfig => ({
+      id: String(x.id || "").trim(),
+      name: String(x.name || "SERVER").trim(),
+      label: String(x.label || "サーバー").trim(),
+      description: String(x.description || "").trim(),
+      edition: String(x.edition || "Java / Bedrock").trim(),
+      javaAddress: String(x.javaAddress || "").trim(),
+      javaPort: String(x.javaPort || "25565").trim(),
+      bedrockAddress: String(x.bedrockAddress || "").trim(),
+      bedrockPort: String(x.bedrockPort || "19132").trim(),
+      bedrockFriendJoin: x.bedrockFriendJoin !== false,
+      bedrockFriendName: String(x.bedrockFriendName || "MCS").trim(),
+      joinMode: x.joinMode === "special" ? "special" : "lobby",
+    }))
+    .filter((x) => x.id)
+
+  if (!servers.some((x) => x.id === "lobby")) {
+    servers.unshift(DEFAULT_JOIN_SERVERS[0])
+  }
+
+  return servers
+}
 export async function GET(){const {data}=await supabaseServer.from("site_settings").select("value").eq("key","join_servers").maybeSingle();if(!data?.value)return NextResponse.json({servers:DEFAULT_JOIN_SERVERS});try{return NextResponse.json({servers:normalize(JSON.parse(data.value))})}catch{return NextResponse.json({servers:DEFAULT_JOIN_SERVERS})}}
 export async function PUT(req:Request){const auth=req.headers.get("authorization")||"";const token=auth.startsWith("Bearer ")?auth.slice(7):"";if(!token)return NextResponse.json({error:"unauthorized"},{status:401});const {data:{user},error}=await supabaseServer.auth.getUser(token);if(error||!user)return NextResponse.json({error:"unauthorized"},{status:401});const {data:profile}=await supabaseServer.from("profiles").select("role,is_admin").eq("id",user.id).maybeSingle();if(!(profile?.is_admin||profile?.role==="owner"||profile?.role==="admin"))return NextResponse.json({error:"forbidden"},{status:403});const body=await req.json().catch(()=>({}));const servers=normalize(body.servers);if(!servers.length)return NextResponse.json({error:"サーバーを1件以上登録してください"},{status:400});const {error:saveError}=await supabaseServer.from("site_settings").upsert({key:"join_servers",value:JSON.stringify(servers),updated_at:new Date().toISOString()},{onConflict:"key"});if(saveError)return NextResponse.json({error:saveError.message},{status:500});return NextResponse.json({ok:true,servers})}
