@@ -168,22 +168,52 @@ export default function HelpPage() {
         <section id="bedrock" className="portal-panel mb-5 scroll-mt-24">
           <p className="section-kicker">BEDROCK EDITION</p>
           <h2 className="text-2xl font-bold mt-1">Bedrock版の参加方法</h2>
-          <div className="space-y-3 mt-5">
-            <Step n="1" title="参加するサーバーを選択">
-              <Link href="/join" className="text-cyan-300 hover:underline">参加方法ページ</Link>でサーバーを選びます。
-            </Step>
-            <Step n="2" title="Bedrock版の接続情報を確認">
-              「Bedrock版で参加」の欄にあるアドレスとポートを確認します。Bedrock版はJava版とポートが異なる場合があるため、Bedrock欄の情報を使用してください。
-            </Step>
-            <Step n="3" title="Minecraft Bedrock版を開く">
-              「サーバー」タブからサーバー一覧を開きます。
-            </Step>
-            <Step n="4" title="サーバーを追加">
-              「サーバーを追加」からサーバー名、サーバーアドレス、ポートを入力して保存します。
-            </Step>
-            <Step n="5" title="保存したサーバーへ参加">
-              追加したサーバーを選択して「サーバーに参加」を実行します。
-            </Step>
+          <p className="text-gray-300 mt-4 leading-7">
+            Bedrock版では、サーバー一覧から「サーバーを追加」して参加できます。実際のMinecraft画面を使って案内します。
+          </p>
+
+          <div className="mt-8 rounded-2xl border border-cyan-400/15 bg-cyan-400/5 p-4 md:p-5">
+            <p className="section-kicker">IMAGE GUIDE</p>
+            <h3 className="text-xl font-bold mt-1">画像で見る：Bedrock版でサーバーを追加</h3>
+            <p className="text-gray-400 text-sm leading-7 mt-2">
+              実際のMinecraft Bedrock版の画面を中心に、サーバー追加の操作を案内します。
+            </p>
+
+            <div className="space-y-6 mt-5">
+              {[
+                {
+                  src: "/help/bedrock/server-add-02.jpg",
+                  alt: "Minecraft Bedrock版のプレイ画面でサーバータブとサーバーを追加を選択する画面",
+                  step: "STEP 1",
+                  title: "「サーバー」タブを開いて「＋ サーバーを追加」を選択",
+                  text: "Minecraft Bedrock版の「プレイ」画面で上部の「サーバー」タブを開き、「＋ サーバーを追加」を選択します。",
+                },
+                {
+                  src: "/help/bedrock/server-add-01.jpg",
+                  alt: "Minecraft Bedrock版のサーバー追加画面でサーバー名とサーバーアドレスとポートを入力する画面",
+                  step: "STEP 2",
+                  title: "サーバー名・アドレス・ポートを入力して「追加してプレイ」",
+                  text: "参加方法ページに表示されているBedrock版のサーバー名・アドレス・ポートを入力し、「追加してプレイ」を選択します。",
+                },
+              ].map((item) => (
+                <div key={item.src} className="overflow-hidden rounded-2xl border border-white/10 bg-black/20">
+                  <div className="aspect-video bg-black/30">
+                    <Image
+                      src={item.src}
+                      alt={item.alt}
+                      width={1280}
+                      height={720}
+                      className="h-auto w-full object-contain"
+                    />
+                  </div>
+                  <div className="border-t border-white/10 px-4 pb-4 pt-4 md:px-5 md:pb-5">
+                    <p className="text-xs font-bold tracking-[0.18em] text-cyan-300">{item.step}</p>
+                    <p className="mt-1 font-bold text-base md:text-lg">{item.title}</p>
+                    <p className="mt-2 text-gray-400 text-sm leading-7">{item.text}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
           <Note>Switchなど、環境によっては外部サーバーへアドレス・ポートで直接参加できない場合があります。その場合は、下の「Bedrockのフレンド参加」を確認してください。</Note>
         </section>
@@ -192,12 +222,51 @@ export default function HelpPage() {
           <p className="section-kicker">BEDROCK FRIEND JOIN</p>
           <h2 className="text-2xl font-bold mt-1">Bedrockのフレンド参加</h2>
           <p className="text-gray-300 mt-4 leading-7">
-            サーバーによっては、Bedrock版でアドレスやポートを入力する代わりに、Minecraftの「フレンド」一覧から参加できる案内を表示しています。
+            サーバーによっては、アドレスやポートを入力する代わりに、Minecraftの「フレンド」画面から参加できます。こちらも実際の画面を使って案内します。
           </p>
-          <div className="space-y-3 mt-5">
-            <Step n="1" title="Minecraftのフレンド画面を開く">「プレイ」から「フレンド」一覧を開きます。</Step>
-            <Step n="2" title="案内されているフレンド名を探す">参加方法ページの「フレンド参加」に表示されている名前と同じものを探します。</Step>
-            <Step n="3" title="参加する">対象のフレンドを選択して、表示される参加ボタンからサーバーへ入ります。</Step>
+
+          <div className="mt-8 rounded-2xl border border-cyan-400/15 bg-cyan-400/5 p-4 md:p-5">
+            <p className="section-kicker">IMAGE GUIDE</p>
+            <h3 className="text-xl font-bold mt-1">画像で見る：フレンドから参加</h3>
+            <p className="text-gray-400 text-sm leading-7 mt-2">
+              フレンド一覧から対象のプレイヤーを探して参加する流れを案内します。
+            </p>
+
+            <div className="space-y-6 mt-5">
+              {[
+                {
+                  src: "/help/bedrock/friend-01.jpg",
+                  alt: "Minecraft Bedrock版のプレイ画面で人物検索を開く画面",
+                  step: "STEP 1",
+                  title: "フレンド画面から人物検索を開く",
+                  text: "「プレイ」画面からフレンド関連の画面を開き、人物検索を選択します。",
+                },
+                {
+                  src: "/help/bedrock/friend-02.jpg",
+                  alt: "Minecraft Bedrock版の人物検索画面でプレイヤーを検索して追加する画面",
+                  step: "STEP 2",
+                  title: "案内されているフレンド名を検索して追加",
+                  text: "参加方法ページに表示されているフレンド名を検索し、対象のプレイヤーを選択してフレンド追加を行います。",
+                },
+              ].map((item) => (
+                <div key={item.src} className="overflow-hidden rounded-2xl border border-white/10 bg-black/20">
+                  <div className="aspect-video bg-black/30">
+                    <Image
+                      src={item.src}
+                      alt={item.alt}
+                      width={1280}
+                      height={720}
+                      className="h-auto w-full object-contain"
+                    />
+                  </div>
+                  <div className="border-t border-white/10 px-4 pb-4 pt-4 md:px-5 md:pb-5">
+                    <p className="text-xs font-bold tracking-[0.18em] text-cyan-300">{item.step}</p>
+                    <p className="mt-1 font-bold text-base md:text-lg">{item.title}</p>
+                    <p className="mt-2 text-gray-400 text-sm leading-7">{item.text}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
           <Note>フレンド参加はサーバーごとに有効・無効が設定されています。参加方法ページにフレンド参加の案内がないサーバーは、表示されているアドレス・ポートを使用してください。</Note>
         </section>
