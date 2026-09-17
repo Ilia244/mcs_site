@@ -190,14 +190,17 @@ function JoinContent() {
                     {lobby.description || "通常サーバーへ移動するための共通ロビーです。"}
                   </p>
                 </div>
-                <div className="info-box">
-                  <span>ロビーから参加できるサーバー</span>
+                <div className="info-box h-64 min-h-64 max-h-64 flex flex-col overflow-hidden">
+                  <div className="flex items-center justify-between gap-3 shrink-0">
+                    <span>ロビーから参加できるサーバー</span>
+                    <span className="text-xs text-gray-500">{lobbyServers.length} サーバー</span>
+                  </div>
                   {lobbyServers.length > 0 ? (
-                    <div className="mt-3 space-y-2">
+                    <div className="mt-3 min-h-0 flex-1 overflow-y-auto pr-1 space-y-2">
                       {lobbyServers.map((item) => (
                         <div
                           key={item.id}
-                          className="rounded-lg border border-white/10 bg-black/10 px-3 py-2"
+                          className="rounded-lg border border-white/10 bg-black/10 px-3 py-2 shrink-0"
                         >
                           <div className="font-bold">{item.label || item.name}</div>
                           <p className="text-xs text-gray-500 mt-0.5">
