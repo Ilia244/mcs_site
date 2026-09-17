@@ -192,48 +192,29 @@ function JoinContent() {
                 </div>
                 <div className="info-box">
                   <span>ロビーから参加できるサーバー</span>
-                  <strong>{lobbyServers.length} サーバー</strong>
-                  <p className="text-gray-500 text-sm mt-1">
-                    下記のサーバーはすべてMCSロビーから参加できます。
-                  </p>
+                  {lobbyServers.length > 0 ? (
+                    <div className="mt-3 space-y-2">
+                      {lobbyServers.map((item) => (
+                        <div
+                          key={item.id}
+                          className="rounded-lg border border-white/10 bg-black/10 px-3 py-2"
+                        >
+                          <div className="font-bold">{item.label || item.name}</div>
+                          <p className="text-xs text-gray-500 mt-0.5">
+                            {item.description || "ロビーから参加できる通常サーバーです。"}
+                          </p>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="text-gray-500 text-sm mt-2">
+                      現在、ロビーから参加できるサーバーは登録されていません。
+                    </p>
+                  )}
                 </div>
               </div>
               {renderConnection(lobby)}
 
-              <div className="mt-8">
-                <div className="flex items-end justify-between gap-3 mb-3">
-                  <div>
-                    <p className="text-xs text-cyan-300 font-bold tracking-widest">LOBBY SERVERS</p>
-                    <h3 className="text-lg font-bold mt-1">ロビーから参加出来るサーバー</h3>
-                  </div>
-                  <span className="text-xs text-gray-500">{lobbyServers.length} サーバー</span>
-                </div>
-
-                {lobbyServers.length > 0 ? (
-                  <div className="space-y-3">
-                    {lobbyServers.map((item) => (
-                      <div
-                        key={item.id}
-                        className="rounded-xl border border-white/10 bg-black/10 px-4 py-3"
-                      >
-                        <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
-                          <h4 className="font-bold">{item.label || item.name}</h4>
-                          {item.name && item.name !== item.label && (
-                            <span className="text-xs text-gray-500">{item.name}</span>
-                          )}
-                        </div>
-                        <p className="text-sm text-gray-400 mt-1">
-                          {item.description || "ロビーから参加できる通常サーバーです。"}
-                        </p>
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <div className="rounded-xl border border-white/10 bg-black/10 px-4 py-3 text-sm text-gray-500">
-                    現在、ロビーから参加できるサーバーは登録されていません。
-                  </div>
-                )}
-              </div>
             </>
           ) : (
             <div className="mt-6 rounded-xl border border-amber-400/20 bg-amber-400/5 p-4 text-amber-200">
