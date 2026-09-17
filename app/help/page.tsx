@@ -1,14 +1,21 @@
-import Link from "next/link"
+"use client"
 
-const topics = [
+import Link from "next/link"
+import { useAuth } from "@/app/providers/AuthProvider"
+import { hasPermission } from "@/lib/role"
+
+const publicTopics = [
   ["#start", "まずはここから"],
   ["#java", "Java版の参加方法"],
   ["#bedrock", "Bedrock版の参加方法"],
   ["#friend", "Bedrockのフレンド参加"],
   ["#copy", "アドレス・ポートのコピー"],
-  ["#server-add", "管理者：サーバーの追加方法"],
   ["#trouble", "接続できないとき"],
   ["#rules", "ルール・困ったとき"],
+]
+
+const adminTopics = [
+  ["#server-add", "管理者：サーバーの追加方法"],
 ]
 
 function Step({ n, title, children }: { n: string; title: string; children: React.ReactNode }) {
@@ -32,6 +39,9 @@ function Note({ children }: { children: React.ReactNode }) {
 }
 
 export default function HelpPage() {
+  const { profile, loading: authLoading, profileLoading } = useAuth()
+  const isAdmin = !authLoading && !profileLoading && hasPermission(profile?.role, 80)
+
   return (
     <div className="portal-bg min-h-screen text-white">
       <main className="relative z-10 max-w-5xl mx-auto px-5 py-14">
@@ -50,12 +60,21 @@ export default function HelpPage() {
           <p className="section-kicker">HELP MENU</p>
           <h2 className="text-xl font-bold mt-1">知りたい項目を選ぶ</h2>
           <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-2 mt-5">
-            {topics.map(([href, label]) => (
+            {publicTopics.map(([href, label]) => (
               <a key={href} href={href} className="rounded-xl border border-white/10 bg-white/[.02] px-4 py-3 text-sm text-gray-300 hover:border-cyan-400/30 hover:text-cyan-200 transition">
                 {label} →
               </a>
             ))}
           </div>
+          {isAdmin && (
+            <div className="mt-3 grid sm:grid-cols-2 lg:grid-cols-4 gap-2">
+              {adminTopics.map(([href, label]) => (
+                <a key={href} href={href} className="rounded-xl border border-amber-400/20 bg-amber-400/5 px-4 py-3 text-sm text-amber-200/90 hover:border-amber-300/40 hover:text-amber-100 transition">
+                  🛡️ {label} →
+                </a>
+              ))}
+            </div>
+          )}
         </nav>
 
         <section id="start" className="portal-panel mb-5 scroll-mt-24">
@@ -146,7 +165,8 @@ export default function HelpPage() {
           </div>
         </section>
 
-        <section id="server-add" className="portal-panel mb-5 scroll-mt-24">
+        {isAdmin && (
+          <section id="server-add" className="portal-panel mb-5 scroll-mt-24">
           <p className="section-kicker">ADMIN / SERVER MANAGEMENT</p>
           <h2 className="text-2xl font-bold mt-1">管理者：サーバーの追加方法</h2>
           <p className="text-gray-300 mt-4 leading-7">
@@ -163,7 +183,8 @@ export default function HelpPage() {
             <Step n="6" title="保存・並べ替え">保存後、サーバー一覧の「↑」「↓」で表示順を変更できます。不要なサーバーは削除できます。</Step>
           </div>
           <Note>サーバーを追加すると、参加方法ページのサーバー選択欄と接続情報カードに反映されます。実際に接続できるかは、入力したアドレス・ポートとMinecraftサーバー側の公開設定にも左右されます。</Note>
-        </section>
+          </section>
+        )}
 
         <section id="trouble" className="portal-panel mb-5 scroll-mt-24">
           <p className="section-kicker">TROUBLESHOOTING</p>
