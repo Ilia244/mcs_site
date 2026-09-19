@@ -109,7 +109,7 @@ create unique index if not exists profiles_minecraft_uuid_unique_idx on public.p
 create or replace function public.admin_get_profiles_paginated_v3(page_number integer, page_size integer, sort_column text default 'created_at', sort_direction text default 'desc')
 returns table (
   id uuid,
-  displayName text,
+  "displayName" text,
   role text,
   is_admin boolean,
   created_at timestamptz,
