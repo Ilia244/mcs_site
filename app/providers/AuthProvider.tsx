@@ -17,6 +17,9 @@ export type Profile = {
   role: string
   is_admin: boolean
   created_at?: string
+  minecraft_id?: string | null
+  minecraft_uuid?: string | null
+  minecraft_last_checked?: string | null
 }
 
 type AuthContextType = {
@@ -62,7 +65,7 @@ export default function AuthProvider({
 
     const { data, error } = await supabase
       .from("profiles")
-      .select("id, displayName, role, is_admin, created_at")
+      .select("id, displayName, role, is_admin, created_at, minecraft_id, minecraft_uuid, minecraft_last_checked")
       .eq("id", currentUser.id)
       .maybeSingle()
 
@@ -84,7 +87,7 @@ export default function AuthProvider({
       } else {
         const { data: created, error: reloadError } = await supabase
           .from("profiles")
-          .select("id, displayName, role, is_admin, created_at")
+          .select("id, displayName, role, is_admin, created_at, minecraft_id, minecraft_uuid, minecraft_last_checked")
           .eq("id", currentUser.id)
           .maybeSingle()
 
@@ -106,6 +109,18 @@ export default function AuthProvider({
     await loadProfile(user)
   }, [loadProfile, user])
 
+  const syncMinecraft = useCallback(async (token: string | null) => {
+    if (!token) return
+    try {
+      await fetch("/api/minecraft/profile", {
+        headers: { Authorization: `Bearer ${token}` },
+        cache: "no-store",
+      })
+    } catch (error) {
+      console.error("Minecraftプロフィール同期エラー:", error)
+    }
+  }, [])
+
   useEffect(() => {
     let active = true
 
@@ -123,6 +138,8 @@ export default function AuthProvider({
         const currentUser = data.session?.user ?? null
         setUser(currentUser)
         setAccessToken(data.session?.access_token ?? null)
+        await loadProfile(currentUser)
+        await syncMinecraft(data.session?.access_token ?? null)
         await loadProfile(currentUser)
       }
 
@@ -147,14 +164,18 @@ export default function AuthProvider({
       }
 
       // onAuthStateChangeのコールバック内でawaitはしない。
-      void loadProfile(nextUser)
+      void (async () => {
+        await loadProfile(nextUser)
+        if (session?.access_token) await syncMinecraft(session.access_token)
+        await loadProfile(nextUser)
+      })()
     })
 
     return () => {
       active = false
       subscription.unsubscribe()
     }
-  }, [loadProfile])
+  }, [loadProfile, syncMinecraft])
 
   const value = useMemo(
     () => ({

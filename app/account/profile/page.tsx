@@ -8,7 +8,7 @@ import PushNotificationSettings from "@/components/PushNotificationSettings"
 
 export default function Profile() {
   const router = useRouter()
-  const { user, profile, loading: authLoading, refreshProfile } = useAuth()
+  const { user, profile, accessToken, loading: authLoading, refreshProfile } = useAuth()
   const [file, setFile] = useState<File | null>(null)
   const [avatarUrl, setAvatarUrl] = useState<string>("")
   const [previewUrl, setPreviewUrl] = useState<string | null>(null)
@@ -17,6 +17,9 @@ export default function Profile() {
   const [uploading, setUploading] = useState(false)
   const [message, setMessage] = useState("")
   const [errorMessage, setErrorMessage] = useState("")
+  const [minecraftId, setMinecraftId] = useState("")
+  const [minecraftUuid, setMinecraftUuid] = useState("")
+  const [savingMinecraft, setSavingMinecraft] = useState(false)
 
   useEffect(() => {
     if (!authLoading && !user) router.replace("/account/login")
@@ -24,7 +27,9 @@ export default function Profile() {
 
   useEffect(() => {
     setNewDisplayName(profile?.displayName || "")
-  }, [profile?.displayName])
+    setMinecraftId(profile?.minecraft_id || "")
+    setMinecraftUuid(profile?.minecraft_uuid || "")
+  }, [profile?.displayName, profile?.minecraft_id, profile?.minecraft_uuid])
 
   useEffect(() => {
     if (!user) {
@@ -78,6 +83,36 @@ export default function Profile() {
     }
 
     setSaving(false)
+  }
+
+  const saveMinecraftId = async () => {
+    setMessage("")
+    setErrorMessage("")
+    const value = minecraftId.trim()
+    if (!user) { setErrorMessage("ログインしてください"); return }
+    if (!/^[A-Za-z0-9_]{3,16}$/.test(value)) {
+      setErrorMessage("Minecraft IDは3〜16文字の英数字または_で入力してください")
+      return
+    }
+    if (!accessToken) { setErrorMessage("ログインセッションを確認できません"); return }
+    setSavingMinecraft(true)
+    try {
+      const response = await fetch("/api/minecraft/profile", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${accessToken}` },
+        body: JSON.stringify({ minecraftId: value }),
+      })
+      const data = await response.json().catch(() => ({}))
+      if (!response.ok) throw new Error(data.error || "Minecraftアカウントの登録に失敗しました")
+      setMinecraftId(data.minecraft_id || value)
+      setMinecraftUuid(data.minecraft_uuid || "")
+      await refreshProfile()
+      setMessage("Minecraft IDを登録しました。UUIDと紐付けています。")
+    } catch (error: any) {
+      setErrorMessage(error?.message || "Minecraftアカウントの登録に失敗しました")
+    } finally {
+      setSavingMinecraft(false)
+    }
   }
 
   const uploadAvatar = async () => {
@@ -176,6 +211,27 @@ export default function Profile() {
         <div className="text-xs text-gray-400 break-all text-center">{user.email}</div>
 
         {message && <div className="w-full text-center text-green-400 text-sm">{message}</div>}
+
+        <div className="w-full rounded-2xl border border-cyan-400/20 bg-cyan-400/5 p-4">
+          <div className="text-sm font-bold text-cyan-300">Minecraftアカウント</div>
+          <p className="text-xs text-gray-400 mt-1">Minecraft IDからUUIDを取得してWebアカウントと紐付けます。Minecraft側で名前を変更した場合も自動で更新します。</p>
+          <div className="mt-3 flex flex-col gap-2">
+            <label className="text-xs text-gray-300">Minecraft ID</label>
+            <input
+              type="text"
+              value={minecraftId}
+              maxLength={16}
+              onChange={(e) => setMinecraftId(e.target.value)}
+              className="p-3 rounded-lg bg-black/40 border border-white/20 focus:outline-none focus:ring-2 focus:ring-cyan-400"
+              placeholder="例: Ilia244"
+            />
+            <button type="button" onClick={saveMinecraftId} disabled={savingMinecraft} className="py-3 rounded-lg bg-gradient-to-r from-cyan-500 to-blue-600 hover:scale-[1.02] transition transform shadow-lg font-semibold disabled:opacity-50">
+              {savingMinecraft ? "確認・登録中..." : minecraftUuid ? "Minecraft IDを更新" : "Minecraft IDを登録"}
+            </button>
+          </div>
+          {minecraftUuid && <div className="mt-3 text-xs text-gray-400 break-all">UUID: <span className="text-gray-200">{minecraftUuid}</span></div>}
+        </div>
+
         <PushNotificationSettings />
         {errorMessage && <div className="w-full text-center text-red-400 text-sm">{errorMessage}</div>}
 

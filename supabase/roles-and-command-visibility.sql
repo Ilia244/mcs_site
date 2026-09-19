@@ -1,5 +1,4 @@
 -- MCS role system + Minecraft command visibility
--- Command visibility may be set to user/moderator/staff/admin/owner.
 -- Run this in Supabase SQL Editor.
 -- Existing profiles.role values are preserved.
 
@@ -99,97 +98,69 @@ as $$
   end;
 $$;
 
--- User management detail view used by the Admin > ユーザー管理 screen.
---
--- The MCID field is read defensively from common profile column names so the
--- UI remains compatible with older profile schemas. If your profiles table
--- uses one of mcid / minecraft_id / minecraftId / minecraft_username, it will
--- be shown automatically.
---
--- Email is read from auth.users because it is not normally stored in profiles.
--- Avatar URL is derived from the existing public avatars bucket convention.
-drop function if exists public.admin_get_profiles_paginated(integer, integer, text, text);
-create or replace function public.admin_get_profiles_paginated(
-  page_number integer,
-  page_size integer,
-  sort_column text,
-  sort_direction text
-)
+
+-- Minecraft account linking + admin user directory v2
+alter table public.profiles add column if not exists minecraft_id text;
+alter table public.profiles add column if not exists minecraft_uuid text;
+alter table public.profiles add column if not exists minecraft_last_checked timestamptz;
+create unique index if not exists profiles_minecraft_uuid_unique_idx on public.profiles(minecraft_uuid) where minecraft_uuid is not null;
+
+-- Returns admin-visible profile data, including the Auth email and Minecraft link.
+create or replace function public.admin_get_profiles_paginated_v2(page_number integer, page_size integer, sort_column text default 'created_at', sort_direction text default 'desc')
 returns table (
   id uuid,
-  "displayName" text,
+  displayName text,
   role text,
   is_admin boolean,
   created_at timestamptz,
   email text,
-  mcid text,
-  avatar_url text
+  minecraft_id text,
+  minecraft_uuid text,
+  minecraft_last_checked timestamptz
 )
 language plpgsql
 security definer
-set search_path = public, auth
+set search_path = public
 as $$
 declare
   actor_role text;
-  actor_level integer;
-  safe_page integer := greatest(coalesce(page_number, 1), 1);
-  safe_size integer := least(greatest(coalesce(page_size, 10), 1), 100);
+  offset_rows integer;
 begin
-  select p.role into actor_role
-  from public.profiles p
-  where p.id = auth.uid();
-
-  actor_level := case actor_role
-    when 'owner' then 100
-    when 'admin' then 80
-    when 'staff' then 60
-    when 'moderator' then 40
-    when 'user' then 10
-    else 0
-  end;
-
-  if actor_level < 80 then
-    raise exception '権限がありません';
-  end if;
-
+  select p.role into actor_role from public.profiles p where p.id = auth.uid();
+  if actor_role not in ('owner','admin') then raise exception '権限がありません'; end if;
+  offset_rows := greatest(page_number - 1, 0) * least(greatest(page_size, 1), 100);
   return query
-  select
-    p.id,
-    coalesce(to_jsonb(p)->>'displayName', to_jsonb(p)->>'display_name') as "displayName",
-    coalesce(p.role, case when p.is_admin then 'admin' else 'user' end) as role,
-    coalesce(p.is_admin, false) as is_admin,
-    p.created_at,
-    au.email,
-    coalesce(
-      to_jsonb(p)->>'mcid',
-      to_jsonb(p)->>'minecraft_id',
-      to_jsonb(p)->>'minecraftId',
-      to_jsonb(p)->>'minecraft_username',
-      to_jsonb(p)->>'minecraftUsername',
-      to_jsonb(p)->>'minecraft_name',
-      to_jsonb(p)->>'minecraftName',
-      to_jsonb(p)->>'mc_name',
-      to_jsonb(p)->>'minecraft'
-    ) as mcid,
-    null::text as avatar_url
-  from public.profiles p
-  left join auth.users au on au.id = p.id
-  order by
-    case when lower(coalesce(sort_column, 'created_at')) = 'displayname'
-      and lower(coalesce(sort_direction, 'desc')) = 'asc'
-      then coalesce(to_jsonb(p)->>'displayName', to_jsonb(p)->>'display_name') end asc nulls last,
-    case when lower(coalesce(sort_column, 'created_at')) = 'displayname'
-      and lower(coalesce(sort_direction, 'desc')) <> 'asc'
-      then coalesce(to_jsonb(p)->>'displayName', to_jsonb(p)->>'display_name') end desc nulls last,
-    case when lower(coalesce(sort_column, 'created_at')) <> 'displayname'
-      and lower(coalesce(sort_direction, 'desc')) = 'asc'
-      then p.created_at end asc nulls last,
-    case when lower(coalesce(sort_column, 'created_at')) <> 'displayname'
-      and lower(coalesce(sort_direction, 'desc')) <> 'asc'
-      then p.created_at end desc nulls last
-  limit safe_size
-  offset (safe_page - 1) * safe_size;
+    select p.id, p."displayName", p.role, p.is_admin, p.created_at, au.email::text, p.minecraft_id, p.minecraft_uuid, p.minecraft_last_checked
+    from public.profiles p
+    left join auth.users au on au.id = p.id
+    order by
+      case when sort_column='displayName' and lower(sort_direction)='asc' then p."displayName" end asc,
+      case when sort_column='displayName' and lower(sort_direction)<>'asc' then p."displayName" end desc,
+      case when sort_column='created_at' and lower(sort_direction)='asc' then p.created_at end asc,
+      case when sort_column='created_at' and lower(sort_direction)<>'asc' then p.created_at end desc,
+      p.created_at desc
+    offset offset_rows
+    limit least(greatest(page_size, 1), 100);
 end;
 $$;
+revoke all on function public.admin_get_profiles_paginated_v2(integer,integer,text,text) from public;
+grant execute on function public.admin_get_profiles_paginated_v2(integer,integer,text,text) to authenticated;
 
-grant execute on function public.admin_get_profiles_paginated(integer, integer, text, text) to authenticated;
+create or replace function public.admin_get_profiles_count_v2()
+returns integer
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  actor_role text;
+  result_count integer;
+begin
+  select p.role into actor_role from public.profiles p where p.id = auth.uid();
+  if actor_role not in ('owner','admin') then raise exception '権限がありません'; end if;
+  select count(*)::integer into result_count from public.profiles;
+  return result_count;
+end;
+$$;
+revoke all on function public.admin_get_profiles_count_v2() from public;
+grant execute on function public.admin_get_profiles_count_v2() to authenticated;
