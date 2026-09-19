@@ -20,6 +20,7 @@ export default function Header() {
   const role = profile?.role || (profile?.is_admin ? "admin" : "user")
   const displayName = profile?.displayName || "未設定"
   const canAccessAdmin = hasPermission(role, 80)
+  const canAccessStaffCommands = hasPermission(role, 60)
   const avatarUrl = user
     ? `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/avatars/${user.id}.png`
     : ""
@@ -156,6 +157,15 @@ export default function Header() {
                     >
                       プロフィールへ
                     </Link>
+                    {canAccessStaffCommands && (
+                      <Link
+                        href="/minecraft/commands"
+                        onClick={() => setOpen(false)}
+                        className="text-cyan-300"
+                      >
+                        Minecraft運営コマンド
+                      </Link>
+                    )}
                     {canAccessAdmin && (
                       <Link
                         href="/admin"
