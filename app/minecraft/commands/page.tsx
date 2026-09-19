@@ -70,7 +70,7 @@ export default function MinecraftCommandsPage() {
       <main className="max-w-6xl mx-auto px-5 py-12">
         <Link href="/minecraft" className="text-cyan-300 text-sm">← Minecraft / MCSへ戻る</Link>
         <div className="mt-7">
-          <p className="section-kicker">STAFF / MOD ONLY</p>
+          <p className="section-kicker">権限付きコマンド</p>
           <h1 className="text-4xl md:text-5xl font-bold">Minecraftコマンド一覧</h1>
           <p className="text-gray-400 mt-3 max-w-3xl">MCSで利用できるMinecraftコマンドの一覧です。一般ユーザー向けのコマンドから運営・管理者向けのコマンドまで、権限に応じて表示されます。</p>
         </div>
