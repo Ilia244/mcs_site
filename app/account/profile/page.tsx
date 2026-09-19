@@ -115,11 +115,13 @@ export default function Profile() {
     }
   }
 
-  const uploadAvatar = async () => {
+  const uploadAvatar = async (selectedFile?: File) => {
     setMessage("")
     setErrorMessage("")
 
-    if (!file) {
+    const targetFile = selectedFile || file
+
+    if (!targetFile) {
       setErrorMessage("画像を選択してください")
       return
     }
@@ -129,41 +131,48 @@ export default function Profile() {
       return
     }
 
-    if (!file.type.startsWith("image/")) {
+    if (!targetFile.type.startsWith("image/")) {
       setErrorMessage("画像ファイルを選択してください")
       return
     }
 
-    if (file.size > 5 * 1024 * 1024) {
+    if (targetFile.size > 5 * 1024 * 1024) {
       setErrorMessage("画像は5MB以下にしてください")
       return
     }
 
     setUploading(true)
+    setFile(targetFile)
+    const nextPreviewUrl = URL.createObjectURL(targetFile)
+    setPreviewUrl(nextPreviewUrl)
 
-    const filePath = `${user.id}.png`
-    const { error } = await supabase.storage
-      .from("avatars")
-      .upload(filePath, file, {
-        upsert: true,
-        contentType: "image/png",
-        cacheControl: "3600",
-      })
+    try {
+      const filePath = `${user.id}.png`
+      const { error } = await supabase.storage
+        .from("avatars")
+        .upload(filePath, targetFile, {
+          upsert: true,
+          contentType: targetFile.type || "image/png",
+          cacheControl: "3600",
+        })
 
-    if (error) {
-      console.error(error)
-      setErrorMessage("アバターのアップロードに失敗しました")
-    } else {
+      if (error) {
+        console.error(error)
+        setErrorMessage("アバターのアップロードに失敗しました")
+        return
+      }
+
       setAvatarUrl(
         `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/avatars/${user.id}.png?v=${Date.now()}`,
       )
-      setPreviewUrl(null)
       setFile(null)
+      setPreviewUrl(null)
       setMessage("アバターを更新しました")
+    } finally {
+      setUploading(false)
     }
-
-    setUploading(false)
   }
+
 
   if (authLoading) {
     return <div className="min-h-screen bg-slate-950 text-white flex items-center justify-center">読み込み中...</div>
@@ -232,7 +241,7 @@ export default function Profile() {
           {minecraftUuid && <div className="mt-3 text-xs text-gray-400 break-all">UUID: <span className="text-gray-200">{minecraftUuid}</span></div>}
         </div>
 
-        <PushNotificationSettings />
+        <PushNotificationSettings compact />
         {errorMessage && <div className="w-full text-center text-red-400 text-sm">{errorMessage}</div>}
 
         <div className="w-full flex flex-col gap-3">
@@ -257,31 +266,23 @@ export default function Profile() {
         <div className="w-full flex flex-col gap-3">
           <label
             htmlFor="avatar-upload"
-            className="cursor-pointer flex items-center justify-center gap-2 py-3 px-4 rounded-xl bg-white/10 border border-white/20 hover:bg-white/20 transition shadow-lg text-sm font-medium"
+            className={`cursor-pointer flex items-center justify-center gap-2 py-3 px-4 rounded-xl bg-gradient-to-r from-pink-500 to-purple-600 hover:scale-[1.02] transition transform shadow-lg text-sm font-semibold ${uploading ? "pointer-events-none opacity-50" : ""}`}
           >
-            📁 画像を選択
+            {uploading ? "アップロード中..." : "📁 プロフィール画像を変更"}
           </label>
           <input
             id="avatar-upload"
             type="file"
             accept="image/png,image/jpeg,image/webp,image/gif"
             className="hidden"
+            disabled={uploading}
             onChange={(e) => {
               const selected = e.target.files?.[0]
-              if (!selected) return
-              setFile(selected)
-              setPreviewUrl(URL.createObjectURL(selected))
+              e.currentTarget.value = ""
+              if (selected) void uploadAvatar(selected)
             }}
           />
-          {file && <div className="text-xs text-gray-300 text-center">選択中: {file.name}</div>}
-          <button
-            type="button"
-            onClick={uploadAvatar}
-            disabled={!file || uploading}
-            className="py-3 rounded-lg bg-gradient-to-r from-pink-500 to-purple-600 hover:scale-[1.02] transition transform shadow-lg font-semibold disabled:opacity-50"
-          >
-            {uploading ? "アップロード中..." : "アバターをアップロード"}
-          </button>
+          <p className="text-[11px] text-gray-500 text-center">画像を選択すると自動でアップロードされます（5MB以下）</p>
         </div>
       </div>
     </div>
