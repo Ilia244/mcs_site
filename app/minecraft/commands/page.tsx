@@ -71,8 +71,8 @@ export default function MinecraftCommandsPage() {
         <Link href="/minecraft" className="text-cyan-300 text-sm">← Minecraft / MCSへ戻る</Link>
         <div className="mt-7">
           <p className="section-kicker">STAFF / MOD ONLY</p>
-          <h1 className="text-4xl md:text-5xl font-bold">運営・管理者向けコマンド</h1>
-          <p className="text-gray-400 mt-3 max-w-3xl">MCSのMinecraftサーバー運営で使用するコマンド一覧です。コマンドごとに閲覧できるロールを設定できます。</p>
+          <h1 className="text-4xl md:text-5xl font-bold">Minecraftコマンド一覧</h1>
+          <p className="text-gray-400 mt-3 max-w-3xl">MCSで利用できるMinecraftコマンドの一覧です。一般ユーザー向けのコマンドから運営・管理者向けのコマンドまで、権限に応じて表示されます。</p>
         </div>
 
         {error && <div className="portal-panel mt-7 border border-red-400/20 text-red-200">{error}</div>}

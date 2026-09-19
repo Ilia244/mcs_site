@@ -163,7 +163,7 @@ export default function Header() {
                         onClick={() => setOpen(false)}
                         className="text-cyan-300"
                       >
-                        Minecraft運営コマンド
+                        Minecraftコマンド一覧
                       </Link>
                     )}
                     {canAccessAdmin && (
