@@ -106,7 +106,7 @@ alter table public.profiles add column if not exists minecraft_last_checked time
 create unique index if not exists profiles_minecraft_uuid_unique_idx on public.profiles(minecraft_uuid) where minecraft_uuid is not null;
 
 -- Returns admin-visible profile data, including the Auth email and Minecraft link.
-create or replace function public.admin_get_profiles_paginated_v2(page_number integer, page_size integer, sort_column text default 'created_at', sort_direction text default 'desc')
+create or replace function public.admin_get_profiles_paginated_v3(page_number integer, page_size integer, sort_column text default 'created_at', sort_direction text default 'desc')
 returns table (
   id uuid,
   displayName text,
@@ -143,10 +143,10 @@ begin
     limit least(greatest(page_size, 1), 100);
 end;
 $$;
-revoke all on function public.admin_get_profiles_paginated_v2(integer,integer,text,text) from public;
-grant execute on function public.admin_get_profiles_paginated_v2(integer,integer,text,text) to authenticated;
+revoke all on function public.admin_get_profiles_paginated_v3(integer,integer,text,text) from public;
+grant execute on function public.admin_get_profiles_paginated_v3(integer,integer,text,text) to authenticated;
 
-create or replace function public.admin_get_profiles_count_v2()
+create or replace function public.admin_get_profiles_count_v3()
 returns integer
 language plpgsql
 security definer
@@ -162,5 +162,5 @@ begin
   return result_count;
 end;
 $$;
-revoke all on function public.admin_get_profiles_count_v2() from public;
-grant execute on function public.admin_get_profiles_count_v2() to authenticated;
+revoke all on function public.admin_get_profiles_count_v3() from public;
+grant execute on function public.admin_get_profiles_count_v3() to authenticated;
