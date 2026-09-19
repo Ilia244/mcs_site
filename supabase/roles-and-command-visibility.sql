@@ -1,4 +1,5 @@
 -- MCS role system + Minecraft command visibility
+-- Command visibility may be set to user/moderator/staff/admin/owner.
 -- Run this in Supabase SQL Editor.
 -- Existing profiles.role values are preserved.
 

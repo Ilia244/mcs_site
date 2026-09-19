@@ -17,6 +17,11 @@ export type MinecraftCommand = {
 }
 
 const DEFAULT_COMMANDS: MinecraftCommand[] = [
+  { id: "tpa", category: "一般", command: "/tpa <player>", name: "テレポート申請", description: "指定したプレイヤーへテレポート申請を送ります。", permission: "essentials.tpa", target: "EssentialsX", notes: "", sort_order: 1, enabled: true, required_role: "user" },
+  { id: "tpaccept", category: "一般", command: "/tpaccept", name: "テレポート許可", description: "届いているテレポート申請を許可します。", permission: "essentials.tpaccept", target: "EssentialsX", notes: "", sort_order: 2, enabled: true, required_role: "user" },
+  { id: "tpdeny", category: "一般", command: "/tpdeny", name: "テレポート拒否", description: "届いているテレポート申請を拒否します。", permission: "essentials.tpdeny", target: "EssentialsX", notes: "", sort_order: 3, enabled: true, required_role: "user" },
+  { id: "hat", category: "一般", command: "/hat", name: "帽子", description: "手に持っているアイテムを頭に装備します。", permission: "essentials.hat", target: "EssentialsX", notes: "", sort_order: 4, enabled: true, required_role: "user" },
+  { id: "sit", category: "一般", command: "/sit", name: "座る", description: "その場に座ります。", permission: "", target: "プラグイン", notes: "", sort_order: 5, enabled: true, required_role: "user" },
   { id: "tp", category: "プレイヤー管理", command: "/tp <player>", name: "テレポート", description: "指定したプレイヤーの場所へ移動します。", permission: "", target: "Minecraft", notes: "", sort_order: 10, enabled: true, required_role: "moderator" },
   { id: "gamemode", category: "プレイヤー管理", command: "/gamemode <mode> [player]", name: "ゲームモード変更", description: "自分または指定したプレイヤーのゲームモードを変更します。", permission: "", target: "Minecraft", notes: "", sort_order: 20, enabled: true, required_role: "staff" },
   { id: "kick", category: "プレイヤー管理", command: "/kick <player>", name: "キック", description: "指定したプレイヤーをサーバーから退出させます。", permission: "", target: "Minecraft / Spigot", notes: "", sort_order: 30, enabled: true, required_role: "staff" },
@@ -42,7 +47,7 @@ async function getSessionProfile(request: Request) {
 
 async function authenticateRead(request: Request) {
   const session = await getSessionProfile(request)
-  return session && session.level >= 40 ? session : null
+  return session && session.level >= 10 ? session : null
 }
 
 async function authenticateManage(request: Request) {
@@ -50,11 +55,11 @@ async function authenticateManage(request: Request) {
   return session && session.level >= 80 ? session : null
 }
 
-const COMMAND_ROLES = new Set(["moderator", "staff", "admin", "owner"])
+const COMMAND_ROLES = new Set(["user", "moderator", "staff", "admin", "owner"])
 
 function normalizeRequiredRole(value: unknown) {
-  const role = String(value || "staff").trim()
-  return COMMAND_ROLES.has(role) ? role : "staff"
+  const role = String(value || "user").trim()
+  return COMMAND_ROLES.has(role) ? role : "user"
 }
 
 function normalize(value: unknown): MinecraftCommand[] {
@@ -88,13 +93,28 @@ export async function GET(request: Request) {
     .maybeSingle()
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
-  if (!data?.value) return NextResponse.json({ commands: DEFAULT_COMMANDS.filter((item) => getRoleLevel(item.required_role) <= session.level) })
+  if (!data?.value) {
+    return NextResponse.json({
+      commands: DEFAULT_COMMANDS.filter((item) => getRoleLevel(item.required_role) <= session.level),
+    })
+  }
 
   try {
-    const commands = normalize(JSON.parse(data.value)).filter((item) => getRoleLevel(item.required_role) <= session.level)
+    const stored = normalize(JSON.parse(data.value))
+    // Add newly introduced default/general commands without overwriting
+    // commands already customized by an administrator.
+    const existingIds = new Set(stored.map((item) => item.id))
+    const merged = [
+      ...stored,
+      ...DEFAULT_COMMANDS.filter((item) => !existingIds.has(item.id)),
+    ].sort((a, b) => a.sort_order - b.sort_order)
+
+    const commands = merged.filter((item) => getRoleLevel(item.required_role) <= session.level)
     return NextResponse.json({ commands })
   } catch {
-    return NextResponse.json({ commands: DEFAULT_COMMANDS.filter((item) => getRoleLevel(item.required_role) <= session.level) })
+    return NextResponse.json({
+      commands: DEFAULT_COMMANDS.filter((item) => getRoleLevel(item.required_role) <= session.level),
+    })
   }
 }
 
