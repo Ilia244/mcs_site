@@ -28,9 +28,43 @@ export default function Profile() {
 
   useEffect(() => {
     setNewDisplayName(profile?.displayName || "")
-    setMinecraftId(profile?.minecraft_id || "")
-    setMinecraftUuid(profile?.minecraft_uuid || "")
-  }, [profile?.displayName, profile?.minecraft_id, profile?.minecraft_uuid])
+  }, [profile?.displayName])
+
+  // Minecraft連携情報は専用APIから取得する。
+  // AuthProvider側のプロフィール取得内容に依存しないため、リロード後も登録済み状態を維持する。
+  useEffect(() => {
+    if (!user || !accessToken) return
+
+    let cancelled = false
+
+    const loadMinecraftLink = async () => {
+      try {
+        const response = await fetch("/api/minecraft/profile", {
+          method: "GET",
+          headers: { Authorization: `Bearer ${accessToken}` },
+          cache: "no-store",
+        })
+        const data = await response.json().catch(() => ({}))
+        if (!response.ok || cancelled) return
+
+        if (data.linked) {
+          setMinecraftId(data.minecraft_id || "")
+          setMinecraftUuid(data.minecraft_uuid || "")
+        } else {
+          setMinecraftId("")
+          setMinecraftUuid("")
+        }
+      } catch (error) {
+        console.error("Minecraft link load error", error)
+      }
+    }
+
+    void loadMinecraftLink()
+
+    return () => {
+      cancelled = true
+    }
+  }, [user, accessToken])
 
   useEffect(() => {
     if (!user) {
