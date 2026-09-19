@@ -19,6 +19,7 @@ export default function Profile() {
   const [errorMessage, setErrorMessage] = useState("")
   const [minecraftId, setMinecraftId] = useState("")
   const [minecraftUuid, setMinecraftUuid] = useState("")
+  const [minecraftLinked, setMinecraftLinked] = useState<boolean | null>(null)
   const [savingMinecraft, setSavingMinecraft] = useState(false)
   const [unlinkingMinecraft, setUnlinkingMinecraft] = useState(false)
 
@@ -47,12 +48,14 @@ export default function Profile() {
         const data = await response.json().catch(() => ({}))
         if (!response.ok || cancelled) return
 
-        if (data.linked) {
-          setMinecraftId(data.minecraft_id || "")
-          setMinecraftUuid(data.minecraft_uuid || "")
+        if (data.linked === true && data.minecraft_id) {
+          setMinecraftId(String(data.minecraft_id))
+          setMinecraftUuid(String(data.minecraft_uuid || ""))
+          setMinecraftLinked(true)
         } else {
           setMinecraftId("")
           setMinecraftUuid("")
+          setMinecraftLinked(false)
         }
       } catch (error) {
         console.error("Minecraft link load error", error)
@@ -139,8 +142,9 @@ export default function Profile() {
       })
       const data = await response.json().catch(() => ({}))
       if (!response.ok) throw new Error(data.error || "Minecraftアカウントの登録に失敗しました")
-      setMinecraftId(data.minecraft_id || value)
-      setMinecraftUuid(data.minecraft_uuid || "")
+      setMinecraftId(String(data.minecraft_id || value))
+      setMinecraftUuid(String(data.minecraft_uuid || ""))
+      setMinecraftLinked(true)
       await refreshProfile()
       setMessage("Minecraft IDを登録しました。UUIDと紐付けています。")
     } catch (error: any) {
@@ -178,6 +182,7 @@ export default function Profile() {
 
       setMinecraftId("")
       setMinecraftUuid("")
+      setMinecraftLinked(false)
       await refreshProfile()
       setMessage("Minecraftアカウントの連携を解除しました。")
     } catch (error: any) {
@@ -359,22 +364,14 @@ export default function Profile() {
 
           <div className="mt-3 flex flex-col gap-2">
             <label className="text-xs text-gray-300">Minecraft ID</label>
-            <input
-              type="text"
-              value={minecraftId}
-              maxLength={16}
-              readOnly={!!minecraftUuid}
-              onChange={(e) => setMinecraftId(e.target.value)}
-              className={`p-3 rounded-lg border focus:outline-none focus:ring-2 focus:ring-cyan-400 ${
-                minecraftUuid
-                  ? "bg-black/60 border-cyan-400/30 text-cyan-100"
-                  : "bg-black/40 border-white/20"
-              }`}
-              placeholder="例: Ilia244"
-            />
-
-            {minecraftUuid ? (
+            {minecraftLinked === null ? (
+              <div className="rounded-lg border border-white/10 bg-black/30 px-3 py-3 text-sm text-gray-400">Minecraftアカウントの連携状態を確認中...</div>
+            ) : minecraftLinked ? (
               <>
+                <div className="rounded-lg border border-cyan-400/20 bg-black/40 px-3 py-3">
+                  <div className="text-[11px] text-gray-400">登録済みMinecraft ID</div>
+                  <div className="mt-1 text-lg font-semibold text-cyan-100 break-all">{minecraftId}</div>
+                </div>
                 <div className="rounded-lg border border-cyan-400/20 bg-cyan-400/5 px-3 py-2 text-xs text-cyan-200">
                   ✓ Minecraftアカウント連携済み
                 </div>
@@ -388,14 +385,24 @@ export default function Profile() {
                 </button>
               </>
             ) : (
-              <button
+              <>
+                <input
+                  type="text"
+                  value={minecraftId}
+                  maxLength={16}
+                  onChange={(e) => setMinecraftId(e.target.value)}
+                  className="p-3 rounded-lg bg-black/40 border border-white/20 focus:outline-none focus:ring-2 focus:ring-cyan-400"
+                  placeholder="例: Ilia244"
+                />
+                <button
                 type="button"
                 onClick={saveMinecraftId}
                 disabled={savingMinecraft}
                 className="py-3 rounded-lg bg-gradient-to-r from-cyan-500 to-blue-600 hover:scale-[1.02] transition transform shadow-lg font-semibold disabled:opacity-50"
-              >
-                {savingMinecraft ? "確認・登録中..." : "Minecraft IDを登録"}
-              </button>
+                >
+                  {savingMinecraft ? "確認・登録中..." : "Minecraft IDを登録"}
+                </button>
+              </>
             )}
           </div>
 
