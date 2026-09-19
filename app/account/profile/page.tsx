@@ -20,6 +20,7 @@ export default function Profile() {
   const [minecraftId, setMinecraftId] = useState("")
   const [minecraftUuid, setMinecraftUuid] = useState("")
   const [savingMinecraft, setSavingMinecraft] = useState(false)
+  const [unlinkingMinecraft, setUnlinkingMinecraft] = useState(false)
 
   useEffect(() => {
     if (!authLoading && !user) router.replace("/account/login")
@@ -112,6 +113,43 @@ export default function Profile() {
       setErrorMessage(error?.message || "Minecraftアカウントの登録に失敗しました")
     } finally {
       setSavingMinecraft(false)
+    }
+  }
+
+  const unlinkMinecraft = async () => {
+    setMessage("")
+    setErrorMessage("")
+
+    if (!user) {
+      setErrorMessage("ログインしてください")
+      return
+    }
+    if (!accessToken) {
+      setErrorMessage("ログインセッションを確認できません")
+      return
+    }
+
+    if (!window.confirm(`Minecraftアカウント「${minecraftId || "登録済みアカウント"}」との連携を解除しますか？`)) {
+      return
+    }
+
+    setUnlinkingMinecraft(true)
+    try {
+      const response = await fetch("/api/minecraft/profile", {
+        method: "DELETE",
+        headers: { Authorization: `Bearer ${accessToken}` },
+      })
+      const data = await response.json().catch(() => ({}))
+      if (!response.ok) throw new Error(data.error || "Minecraftアカウントの連携解除に失敗しました")
+
+      setMinecraftId("")
+      setMinecraftUuid("")
+      await refreshProfile()
+      setMessage("Minecraftアカウントの連携を解除しました。")
+    } catch (error: any) {
+      setErrorMessage(error?.message || "Minecraftアカウントの連携解除に失敗しました")
+    } finally {
+      setUnlinkingMinecraft(false)
     }
   }
 
@@ -291,18 +329,40 @@ export default function Profile() {
               type="text"
               value={minecraftId}
               maxLength={16}
+              readOnly={!!minecraftUuid}
               onChange={(e) => setMinecraftId(e.target.value)}
-              className="p-3 rounded-lg bg-black/40 border border-white/20 focus:outline-none focus:ring-2 focus:ring-cyan-400"
+              className={`p-3 rounded-lg border focus:outline-none focus:ring-2 focus:ring-cyan-400 ${
+                minecraftUuid
+                  ? "bg-black/60 border-cyan-400/30 text-cyan-100"
+                  : "bg-black/40 border-white/20"
+              }`}
               placeholder="例: Ilia244"
             />
-            <button
-              type="button"
-              onClick={saveMinecraftId}
-              disabled={savingMinecraft}
-              className="py-3 rounded-lg bg-gradient-to-r from-cyan-500 to-blue-600 hover:scale-[1.02] transition transform shadow-lg font-semibold disabled:opacity-50"
-            >
-              {savingMinecraft ? "確認・登録中..." : minecraftUuid ? "Minecraft IDを更新" : "Minecraft IDを登録"}
-            </button>
+
+            {minecraftUuid ? (
+              <>
+                <div className="rounded-lg border border-cyan-400/20 bg-cyan-400/5 px-3 py-2 text-xs text-cyan-200">
+                  ✓ Minecraftアカウント連携済み
+                </div>
+                <button
+                  type="button"
+                  onClick={unlinkMinecraft}
+                  disabled={unlinkingMinecraft}
+                  className="py-3 rounded-lg border border-red-400/40 bg-red-500/10 text-red-300 hover:bg-red-500/20 transition font-semibold disabled:opacity-50"
+                >
+                  {unlinkingMinecraft ? "連携解除中..." : "Minecraftアカウントの連携を解除"}
+                </button>
+              </>
+            ) : (
+              <button
+                type="button"
+                onClick={saveMinecraftId}
+                disabled={savingMinecraft}
+                className="py-3 rounded-lg bg-gradient-to-r from-cyan-500 to-blue-600 hover:scale-[1.02] transition transform shadow-lg font-semibold disabled:opacity-50"
+              >
+                {savingMinecraft ? "確認・登録中..." : "Minecraft IDを登録"}
+              </button>
+            )}
           </div>
 
           {minecraftUuid && (

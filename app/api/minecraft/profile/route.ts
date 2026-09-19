@@ -131,3 +131,25 @@ export async function GET(request: Request) {
     })
   }
 }
+
+
+export async function DELETE(request: Request) {
+  const user = await getUserFromRequest(request)
+  if (!user) return NextResponse.json({ error: "unauthorized" }, { status: 401 })
+
+  const { error } = await supabaseServer
+    .from("profiles")
+    .update({
+      minecraft_id: null,
+      minecraft_uuid: null,
+      minecraft_last_checked: null,
+    })
+    .eq("id", user.id)
+
+  if (error) {
+    console.error("Minecraft account unlink error", error)
+    return NextResponse.json({ error: "Minecraftアカウントの連携解除に失敗しました。" }, { status: 500 })
+  }
+
+  return NextResponse.json({ linked: false })
+}
