@@ -98,3 +98,98 @@ as $$
     else 0
   end;
 $$;
+
+-- User management detail view used by the Admin > ユーザー管理 screen.
+--
+-- The MCID field is read defensively from common profile column names so the
+-- UI remains compatible with older profile schemas. If your profiles table
+-- uses one of mcid / minecraft_id / minecraftId / minecraft_username, it will
+-- be shown automatically.
+--
+-- Email is read from auth.users because it is not normally stored in profiles.
+-- Avatar URL is derived from the existing public avatars bucket convention.
+drop function if exists public.admin_get_profiles_paginated(integer, integer, text, text);
+create or replace function public.admin_get_profiles_paginated(
+  page_number integer,
+  page_size integer,
+  sort_column text,
+  sort_direction text
+)
+returns table (
+  id uuid,
+  "displayName" text,
+  role text,
+  is_admin boolean,
+  created_at timestamptz,
+  email text,
+  mcid text,
+  avatar_url text
+)
+language plpgsql
+security definer
+set search_path = public, auth
+as $$
+declare
+  actor_role text;
+  actor_level integer;
+  safe_page integer := greatest(coalesce(page_number, 1), 1);
+  safe_size integer := least(greatest(coalesce(page_size, 10), 1), 100);
+begin
+  select p.role into actor_role
+  from public.profiles p
+  where p.id = auth.uid();
+
+  actor_level := case actor_role
+    when 'owner' then 100
+    when 'admin' then 80
+    when 'staff' then 60
+    when 'moderator' then 40
+    when 'user' then 10
+    else 0
+  end;
+
+  if actor_level < 80 then
+    raise exception '権限がありません';
+  end if;
+
+  return query
+  select
+    p.id,
+    coalesce(to_jsonb(p)->>'displayName', to_jsonb(p)->>'display_name') as "displayName",
+    coalesce(p.role, case when p.is_admin then 'admin' else 'user' end) as role,
+    coalesce(p.is_admin, false) as is_admin,
+    p.created_at,
+    au.email,
+    coalesce(
+      to_jsonb(p)->>'mcid',
+      to_jsonb(p)->>'minecraft_id',
+      to_jsonb(p)->>'minecraftId',
+      to_jsonb(p)->>'minecraft_username',
+      to_jsonb(p)->>'minecraftUsername',
+      to_jsonb(p)->>'minecraft_name',
+      to_jsonb(p)->>'minecraftName',
+      to_jsonb(p)->>'mc_name',
+      to_jsonb(p)->>'minecraft'
+    ) as mcid,
+    null::text as avatar_url
+  from public.profiles p
+  left join auth.users au on au.id = p.id
+  order by
+    case when lower(coalesce(sort_column, 'created_at')) = 'displayname'
+      and lower(coalesce(sort_direction, 'desc')) = 'asc'
+      then coalesce(to_jsonb(p)->>'displayName', to_jsonb(p)->>'display_name') end asc nulls last,
+    case when lower(coalesce(sort_column, 'created_at')) = 'displayname'
+      and lower(coalesce(sort_direction, 'desc')) <> 'asc'
+      then coalesce(to_jsonb(p)->>'displayName', to_jsonb(p)->>'display_name') end desc nulls last,
+    case when lower(coalesce(sort_column, 'created_at')) <> 'displayname'
+      and lower(coalesce(sort_direction, 'desc')) = 'asc'
+      then p.created_at end asc nulls last,
+    case when lower(coalesce(sort_column, 'created_at')) <> 'displayname'
+      and lower(coalesce(sort_direction, 'desc')) <> 'asc'
+      then p.created_at end desc nulls last
+  limit safe_size
+  offset (safe_page - 1) * safe_size;
+end;
+$$;
+
+grant execute on function public.admin_get_profiles_paginated(integer, integer, text, text) to authenticated;
