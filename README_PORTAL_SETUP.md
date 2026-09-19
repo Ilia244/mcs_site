@@ -48,3 +48,8 @@ YouTube連携では、設定したチャンネルの新着動画・配信開始�
 
 ## 7. LIVE表示
 複数の配信が同時に配信中の場合、ホームとYouTubeページでは横スクロール式カルーセルで切り替えます。スマートフォンは1件ずつ、PCは大きめのカードを横方向へ切り替えるUIです。
+
+
+## v8.10.1 Account stability
+
+AuthProvider now loads only the core profile columns (id/displayName/role/is_admin/created_at). Optional Minecraft columns are not part of the authentication/profile gate, so a missing or not-yet-migrated Minecraft column cannot make the logged-in profile disappear or revoke access to the admin page.

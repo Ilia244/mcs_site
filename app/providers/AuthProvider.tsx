@@ -65,7 +65,7 @@ export default function AuthProvider({
 
     const { data, error } = await supabase
       .from("profiles")
-      .select("id, displayName, role, is_admin, created_at, minecraft_id, minecraft_uuid, minecraft_last_checked")
+      .select("id, displayName, role, is_admin, created_at")
       .eq("id", currentUser.id)
       .maybeSingle()
 
@@ -87,7 +87,7 @@ export default function AuthProvider({
       } else {
         const { data: created, error: reloadError } = await supabase
           .from("profiles")
-          .select("id, displayName, role, is_admin, created_at, minecraft_id, minecraft_uuid, minecraft_last_checked")
+          .select("id, displayName, role, is_admin, created_at")
           .eq("id", currentUser.id)
           .maybeSingle()
 
