@@ -9,6 +9,7 @@ type MinecraftCommand = {
   id: string
   category: string
   command: string
+  aliases: string[]
   name: string
   description: string
   permission: string
@@ -53,7 +54,7 @@ export default function MinecraftCommandsPage() {
   const filtered = useMemo(() => commands.filter((item) => {
     if (!item.enabled) return false
     if (category !== "all" && item.category !== category) return false
-    const text = `${item.command} ${item.name} ${item.description} ${item.target}`.toLowerCase()
+    const text = `${item.command} ${item.aliases.join(" ")} ${item.name} ${item.description} ${item.target}`.toLowerCase()
     return !query.trim() || text.includes(query.trim().toLowerCase())
   }), [commands, category, query])
 
@@ -97,7 +98,7 @@ export default function MinecraftCommandsPage() {
                       <div className="min-w-0">
                         <div className="flex flex-wrap items-center gap-2">
                           <code className="text-cyan-200 bg-black/20 rounded-lg px-3 py-2 break-all">{item.command}</code>
-                          <span className="text-xs text-gray-400 border border-white/10 rounded-full px-2 py-1">{item.target}</span>
+                          <span className="text-xs text-gray-400 border border-white/10 rounded-full px-2 py-1">{item.target}</span>{item.aliases.length > 0 && <span className="text-xs text-cyan-300/80 border border-cyan-400/10 rounded-full px-2 py-1">別名: {item.aliases.join(" / ")}</span>}
                         </div>
                         <h3 className="font-bold text-lg mt-3">{item.name}</h3>
                         <p className="text-gray-400 mt-1 whitespace-pre-wrap">{item.description}</p>
