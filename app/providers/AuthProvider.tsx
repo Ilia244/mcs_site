@@ -139,8 +139,8 @@ export default function AuthProvider({
         setUser(currentUser)
         setAccessToken(data.session?.access_token ?? null)
         await loadProfile(currentUser)
-        await syncMinecraft(data.session?.access_token ?? null)
-        await loadProfile(currentUser)
+        // Minecraft連携の自動同期はページロードをブロックしない。
+        void syncMinecraft(data.session?.access_token ?? null)
       }
 
       if (active) setLoading(false)
@@ -166,8 +166,8 @@ export default function AuthProvider({
       // onAuthStateChangeのコールバック内でawaitはしない。
       void (async () => {
         await loadProfile(nextUser)
-        if (session?.access_token) await syncMinecraft(session.access_token)
-        await loadProfile(nextUser)
+        // 外部Minecraft APIの応答待ちで認証状態を遅延させない。
+        if (session?.access_token) void syncMinecraft(session.access_token)
       })()
     })
 
