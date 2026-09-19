@@ -177,7 +177,7 @@ export default function PushNotificationSettings({ compact = false }: Props) {
 
   if (compact) {
     return (
-      <div className="push-settings-compact rounded-xl border border-white/15 bg-slate-950/95 shadow-lg shadow-black/30 p-1">
+      <div className="push-settings-compact relative rounded-xl border border-white/15 bg-slate-950/98 shadow-lg shadow-black/30 p-1">
         <button
           type="button"
           onClick={() => setSettingsOpen(value => !value)}
@@ -192,7 +192,7 @@ export default function PushNotificationSettings({ compact = false }: Props) {
         </button>
 
         {settingsOpen && (
-          <div className="mt-2 rounded-xl border border-white/10 bg-slate-900/98 p-3 shadow-xl">
+          <div className="absolute top-full right-0 mt-2 z-[60] w-72 max-w-[calc(100vw-3rem)] rounded-xl border border-white/15 bg-slate-950 p-3 shadow-2xl shadow-black/50">
             <div className="flex items-center justify-between gap-3 mb-3">
               <div className="min-w-0">
                 <div className="text-sm font-semibold">プッシュ通知</div>
