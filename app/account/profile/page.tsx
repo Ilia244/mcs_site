@@ -185,45 +185,104 @@ export default function Profile() {
 
   return (
     <div className="min-h-screen flex items-center justify-center p-6 bg-gradient-to-br from-purple-900 via-black to-indigo-900">
-      <div className="backdrop-blur-lg bg-white/10 border border-white/20 rounded-2xl shadow-2xl p-8 w-full max-w-md text-white flex flex-col items-center gap-6">
-        <h1 className="text-3xl font-bold">プロフィール</h1>
+      <div className="relative backdrop-blur-lg bg-white/10 border border-white/20 rounded-2xl shadow-2xl p-8 w-full max-w-md text-white flex flex-col items-center gap-6">
+        <h1 className="text-3xl font-bold pr-28 sm:pr-32">プロフィール</h1>
 
-        <div className="relative group">
-          <img
-            src={previewUrl || avatarUrl || "/default_avatar.png"}
-            alt="avatar"
-            onError={(event) => {
-              event.currentTarget.src = "/default_avatar.png"
-            }}
-            className="w-32 h-32 rounded-full object-cover border-4 border-purple-400 shadow-lg cursor-pointer transition group-hover:brightness-75"
-            onClick={() => document.getElementById("avatar-upload")?.click()}
-          />
-          <div
-            onClick={() => document.getElementById("avatar-upload")?.click()}
-            className="absolute inset-0 flex items-center justify-center rounded-full bg-black/50 opacity-0 group-hover:opacity-100 transition cursor-pointer text-sm font-semibold"
-          >
-            変更
-          </div>
+        {/* 通知設定：プロフィールカード右上 */}
+        <div className="absolute top-4 right-4 w-40 sm:w-48 z-20">
+          <PushNotificationSettings compact />
         </div>
-
-        <div className="flex items-center gap-3 flex-wrap justify-center">
-          <span className={`text-2xl font-semibold ${isAdmin ? "bg-gradient-to-r from-yellow-300 via-orange-400 to-red-500 bg-clip-text text-transparent" : ""}`}>
-            {profile?.displayName || "表示名未設定"}
-          </span>
-          {isAdmin && (
-            <span className="px-3 py-1 rounded-full text-xs font-bold bg-gradient-to-r from-yellow-400 to-red-500 text-black shadow-md">
-              {role.toUpperCase()}
-            </span>
-          )}
-        </div>
-
-        <div className="text-xs text-gray-400 break-all text-center">{user.email}</div>
 
         {message && <div className="w-full text-center text-green-400 text-sm">{message}</div>}
+        {errorMessage && <div className="w-full text-center text-red-400 text-sm">{errorMessage}</div>}
 
-        <div className="w-full rounded-2xl border border-cyan-400/20 bg-cyan-400/5 p-4">
+        {/* 01. 表示名・プロフィール画像 */}
+        <section className="w-full rounded-2xl border border-purple-400/20 bg-purple-400/5 p-5">
+          <div className="text-sm font-bold text-purple-300 mb-4">プロフィール</div>
+
+          <div className="flex flex-col items-center gap-4">
+            <div className="relative group">
+              <img
+                src={previewUrl || avatarUrl || "/default_avatar.png"}
+                alt="avatar"
+                onError={(event) => {
+                  event.currentTarget.src = "/default_avatar.png"
+                }}
+                className="w-32 h-32 rounded-full object-cover border-4 border-purple-400 shadow-lg cursor-pointer transition group-hover:brightness-75"
+                onClick={() => document.getElementById("avatar-upload")?.click()}
+              />
+              <div
+                onClick={() => document.getElementById("avatar-upload")?.click()}
+                className="absolute inset-0 flex items-center justify-center rounded-full bg-black/50 opacity-0 group-hover:opacity-100 transition cursor-pointer text-sm font-semibold"
+              >
+                変更
+              </div>
+            </div>
+
+            <div className="flex items-center gap-3 flex-wrap justify-center">
+              <span className={`text-2xl font-semibold ${isAdmin ? "bg-gradient-to-r from-yellow-300 via-orange-400 to-red-500 bg-clip-text text-transparent" : ""}`}>
+                {profile?.displayName || "表示名未設定"}
+              </span>
+              {isAdmin && (
+                <span className="px-3 py-1 rounded-full text-xs font-bold bg-gradient-to-r from-yellow-400 to-red-500 text-black shadow-md">
+                  {role.toUpperCase()}
+                </span>
+              )}
+            </div>
+
+            <div className="text-xs text-gray-400 break-all text-center">{user.email}</div>
+
+            <div className="w-full flex flex-col gap-3">
+              <label className="text-xs text-gray-300">表示名</label>
+              <input
+                type="text"
+                value={newDisplayName}
+                maxLength={20}
+                onChange={(e) => setNewDisplayName(e.target.value)}
+                className="p-3 rounded-lg bg-black/40 border border-white/20 focus:outline-none focus:ring-2 focus:ring-purple-400"
+                placeholder="新しい表示名"
+              />
+              <button
+                type="button"
+                onClick={updateDisplayName}
+                disabled={saving}
+                className="py-3 rounded-lg bg-gradient-to-r from-purple-500 to-indigo-500 hover:scale-[1.02] transition transform shadow-lg font-semibold disabled:opacity-50"
+              >
+                {saving ? "更新中..." : "表示名を変更"}
+              </button>
+            </div>
+
+            <div className="w-full">
+              <label
+                htmlFor="avatar-upload"
+                className={`cursor-pointer flex items-center justify-center gap-2 py-3 px-4 rounded-xl bg-gradient-to-r from-pink-500 to-purple-600 hover:scale-[1.02] transition transform shadow-lg text-sm font-semibold ${uploading ? "pointer-events-none opacity-50" : ""}`}
+              >
+                {uploading ? "アップロード中..." : "📁 プロフィール画像を変更"}
+              </label>
+              <input
+                id="avatar-upload"
+                type="file"
+                accept="image/png,image/jpeg,image/webp,image/gif"
+                className="hidden"
+                disabled={uploading}
+                onChange={(e) => {
+                  const selected = e.target.files?.[0]
+                  e.currentTarget.value = ""
+                  if (selected) void uploadAvatar(selected)
+                }}
+              />
+              <p className="text-[11px] text-gray-500 text-center mt-2">画像を選択すると自動でアップロードされます（5MB以下）</p>
+            </div>
+          </div>
+        </section>
+
+        {/* 02. Minecraftアカウント連携 */}
+        <section className="w-full rounded-2xl border border-cyan-400/20 bg-cyan-400/5 p-5">
           <div className="text-sm font-bold text-cyan-300">Minecraftアカウント</div>
-          <p className="text-xs text-gray-400 mt-1">Minecraft IDからUUIDを取得してWebアカウントと紐付けます。Minecraft側で名前を変更した場合も自動で更新します。</p>
+          <p className="text-xs text-gray-400 mt-1">
+            Minecraft IDからUUIDを取得してWebアカウントと紐付けます。Minecraft側で名前を変更した場合も自動で更新します。
+          </p>
+
           <div className="mt-3 flex flex-col gap-2">
             <label className="text-xs text-gray-300">Minecraft ID</label>
             <input
@@ -234,57 +293,22 @@ export default function Profile() {
               className="p-3 rounded-lg bg-black/40 border border-white/20 focus:outline-none focus:ring-2 focus:ring-cyan-400"
               placeholder="例: Ilia244"
             />
-            <button type="button" onClick={saveMinecraftId} disabled={savingMinecraft} className="py-3 rounded-lg bg-gradient-to-r from-cyan-500 to-blue-600 hover:scale-[1.02] transition transform shadow-lg font-semibold disabled:opacity-50">
+            <button
+              type="button"
+              onClick={saveMinecraftId}
+              disabled={savingMinecraft}
+              className="py-3 rounded-lg bg-gradient-to-r from-cyan-500 to-blue-600 hover:scale-[1.02] transition transform shadow-lg font-semibold disabled:opacity-50"
+            >
               {savingMinecraft ? "確認・登録中..." : minecraftUuid ? "Minecraft IDを更新" : "Minecraft IDを登録"}
             </button>
           </div>
-          {minecraftUuid && <div className="mt-3 text-xs text-gray-400 break-all">UUID: <span className="text-gray-200">{minecraftUuid}</span></div>}
-        </div>
 
-        <PushNotificationSettings compact />
-        {errorMessage && <div className="w-full text-center text-red-400 text-sm">{errorMessage}</div>}
-
-        <div className="w-full flex flex-col gap-3">
-          <input
-            type="text"
-            value={newDisplayName}
-            maxLength={20}
-            onChange={(e) => setNewDisplayName(e.target.value)}
-            className="p-3 rounded-lg bg-black/40 border border-white/20 focus:outline-none focus:ring-2 focus:ring-purple-400"
-            placeholder="新しい表示名"
-          />
-          <button
-            type="button"
-            onClick={updateDisplayName}
-            disabled={saving}
-            className="py-3 rounded-lg bg-gradient-to-r from-purple-500 to-indigo-500 hover:scale-[1.02] transition transform shadow-lg font-semibold disabled:opacity-50"
-          >
-            {saving ? "更新中..." : "表示名を変更"}
-          </button>
-        </div>
-
-        <div className="w-full flex flex-col gap-3">
-          <label
-            htmlFor="avatar-upload"
-            className={`cursor-pointer flex items-center justify-center gap-2 py-3 px-4 rounded-xl bg-gradient-to-r from-pink-500 to-purple-600 hover:scale-[1.02] transition transform shadow-lg text-sm font-semibold ${uploading ? "pointer-events-none opacity-50" : ""}`}
-          >
-            {uploading ? "アップロード中..." : "📁 プロフィール画像を変更"}
-          </label>
-          <input
-            id="avatar-upload"
-            type="file"
-            accept="image/png,image/jpeg,image/webp,image/gif"
-            className="hidden"
-            disabled={uploading}
-            onChange={(e) => {
-              const selected = e.target.files?.[0]
-              e.currentTarget.value = ""
-              if (selected) void uploadAvatar(selected)
-            }}
-          />
-          <p className="text-[11px] text-gray-500 text-center">画像を選択すると自動でアップロードされます（5MB以下）</p>
-        </div>
+          {minecraftUuid && (
+            <div className="mt-3 text-xs text-gray-400 break-all">
+              UUID: <span className="text-gray-200">{minecraftUuid}</span>
+            </div>
+          )}
+        </section>
       </div>
     </div>
   )
-}
