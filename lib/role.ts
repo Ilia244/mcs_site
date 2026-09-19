@@ -6,6 +6,14 @@ export const ROLE_LEVEL = {
   user: 10,
 } as const
 
+export const ROLE_LABEL = {
+  owner: "オーナー",
+  admin: "管理者",
+  staff: "スタッフ",
+  moderator: "モデレーター",
+  user: "一般ユーザー",
+} as const
+
 export type Role = keyof typeof ROLE_LEVEL
 
 export function getRoleLevel(role?: string) {

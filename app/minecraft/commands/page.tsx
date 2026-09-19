@@ -16,6 +16,7 @@ type MinecraftCommand = {
   notes: string
   sort_order: number
   enabled: boolean
+  required_role: string
 }
 
 export default function MinecraftCommandsPage() {
@@ -30,7 +31,7 @@ export default function MinecraftCommandsPage() {
   useEffect(() => {
     if (loading || profileLoading) return
     const role = profile?.role || (profile?.is_admin ? "admin" : "user")
-    if (!user || getRoleLevel(role) < 60) {
+    if (!user || getRoleLevel(role) < 40) {
       router.replace("/")
       return
     }
@@ -69,9 +70,9 @@ export default function MinecraftCommandsPage() {
       <main className="max-w-6xl mx-auto px-5 py-12">
         <Link href="/minecraft" className="text-cyan-300 text-sm">← Minecraft / MCSへ戻る</Link>
         <div className="mt-7">
-          <p className="section-kicker">STAFF ONLY</p>
+          <p className="section-kicker">STAFF / MOD ONLY</p>
           <h1 className="text-4xl md:text-5xl font-bold">運営・管理者向けコマンド</h1>
-          <p className="text-gray-400 mt-3 max-w-3xl">MCSのMinecraftサーバー運営で使用するコマンド一覧です。内容は管理画面から変更できます。</p>
+          <p className="text-gray-400 mt-3 max-w-3xl">MCSのMinecraftサーバー運営で使用するコマンド一覧です。コマンドごとに閲覧できるロールを設定できます。</p>
         </div>
 
         {error && <div className="portal-panel mt-7 border border-red-400/20 text-red-200">{error}</div>}
