@@ -177,11 +177,11 @@ export default function PushNotificationSettings({ compact = false }: Props) {
 
   if (compact) {
     return (
-      <div className="push-settings-compact border-b border-white/10 pb-2 mb-2">
+      <div className="push-settings-compact rounded-xl border border-white/15 bg-slate-950/95 shadow-lg shadow-black/30 p-1">
         <button
           type="button"
           onClick={() => setSettingsOpen(value => !value)}
-          className="w-full flex items-center justify-between gap-3 rounded-lg px-3 py-2 text-left hover:bg-white/5"
+          className="w-full flex items-center justify-between gap-3 rounded-lg px-3 py-2 text-left bg-slate-900/90 hover:bg-slate-800/90 transition"
           aria-expanded={settingsOpen}
         >
           <span className="flex items-center gap-2 min-w-0">
@@ -192,7 +192,7 @@ export default function PushNotificationSettings({ compact = false }: Props) {
         </button>
 
         {settingsOpen && (
-          <div className="mt-2 rounded-xl border border-white/10 bg-black/30 p-3">
+          <div className="mt-2 rounded-xl border border-white/10 bg-slate-900/98 p-3 shadow-xl">
             <div className="flex items-center justify-between gap-3 mb-3">
               <div className="min-w-0">
                 <div className="text-sm font-semibold">プッシュ通知</div>

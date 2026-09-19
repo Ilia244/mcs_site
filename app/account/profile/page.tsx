@@ -186,11 +186,13 @@ export default function Profile() {
   return (
     <div className="min-h-screen flex items-center justify-center p-6 bg-gradient-to-br from-purple-900 via-black to-indigo-900">
       <div className="relative backdrop-blur-lg bg-white/10 border border-white/20 rounded-2xl shadow-2xl p-8 w-full max-w-md text-white flex flex-col items-center gap-6">
-        <h1 className="text-3xl font-bold pr-28 sm:pr-32">プロフィール</h1>
+        <div className="w-full flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
+          <h1 className="text-3xl font-bold">プロフィール</h1>
 
-        {/* 通知設定：プロフィールカード右上 */}
-        <div className="absolute top-4 right-4 w-40 sm:w-48 z-20">
-          <PushNotificationSettings compact />
+          {/* 通知設定：タイトルと重ならないように同じヘッダー内へ配置 */}
+          <div className="w-full sm:w-48 sm:shrink-0">
+            <PushNotificationSettings compact />
+          </div>
         </div>
 
         {message && <div className="w-full text-center text-green-400 text-sm">{message}</div>}
